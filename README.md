@@ -35,9 +35,9 @@ O banco de dados PostgreSQL roda via Docker para facilitar a configuração do a
     ```bash
    ./mvnw spring-boot:run
    ```
+    O backend estará disponivel na porta 8080
 
 ### 2. Configuração do Frontend
-O banco de dados PostgreSQL roda via Docker para facilitar a configuração do ambiente.
 
 1. Abra um novo terminal e navegue até a pasta do frontend::
    ```bash
@@ -52,4 +52,5 @@ O banco de dados PostgreSQL roda via Docker para facilitar a configuração do a
     ```bash
    npm run dev
    ```
+    O Frontend estará disponivel na porta 5173
    
