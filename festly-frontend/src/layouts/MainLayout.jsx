@@ -56,12 +56,10 @@ export default function MainLayout() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-                <Link to="/dashboard">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <User className="h-4 w-4" />
-                    {user.name || 'Minha conta'}
-                  </Button>
-                </Link>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <User className="h-4 w-4" />
+                  {user.name || 'Minha conta'}
+                </Button>
                 <Button variant="ghost" size="icon-sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -110,14 +108,10 @@ export default function MainLayout() {
               <div className="flex flex-col gap-2">
                 {user ? (
                   <>
-                    <SheetClose asChild>
-                      <Link to="/dashboard">
-                        <Button variant="outline" className="w-full justify-start gap-2" size="sm">
-                          <User className="h-4 w-4" />
-                          Minha conta
-                        </Button>
-                      </Link>
-                    </SheetClose>
+                    <Button variant="outline" className="w-full justify-start gap-2" size="sm">
+                      <User className="h-4 w-4" />
+                      {user.name || 'Minha conta'}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"

@@ -38,7 +38,7 @@ export default function Register() {
         password: form.password,
         role: form.role,
       });
-      navigate('/dashboard');
+      navigate('/');
     } catch {
       setError('Erro ao criar conta. Tente novamente.');
     } finally {
