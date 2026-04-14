@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ServicoRepository extends JpaRepository<Servico, Long>, JpaSpecificationExecutor<Servico> {
 
-    List<Servico> findByFornecedor_Id(Long fornecedorId);
+    List<Servico> findByUsuario_Id(Long usuarioId);
 
     List<Servico> findByCategoria(CategoriaServico categoria);
 

@@ -58,7 +58,7 @@ export default function MainLayout() {
               <>
                 <Button variant="ghost" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  {user.name || 'Minha conta'}
+                  {user.nome || 'Minha conta'}
                 </Button>
                 <Button variant="ghost" size="icon-sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
@@ -110,7 +110,7 @@ export default function MainLayout() {
                   <>
                     <Button variant="outline" className="w-full justify-start gap-2" size="sm">
                       <User className="h-4 w-4" />
-                      {user.name || 'Minha conta'}
+                      {user.nome || 'Minha conta'}
                     </Button>
                     <Button
                       variant="ghost"

@@ -15,7 +15,7 @@ public class ServicoResponse {
     private BigDecimal preco;
     private CategoriaServico categoria;
     private boolean disponivel;
-    private Long fornecedorId;
+    private Long usuarioId;
 
     public static ServicoResponse from(Servico servico) {
         ServicoResponse response = new ServicoResponse();
@@ -25,7 +25,7 @@ public class ServicoResponse {
         response.setPreco(servico.getPreco());
         response.setCategoria(servico.getCategoria());
         response.setDisponivel(servico.isDisponivel());
-        response.setFornecedorId(servico.getFornecedor().getId());
+        response.setUsuarioId(servico.getUsuario().getId());
         return response;
     }
 }

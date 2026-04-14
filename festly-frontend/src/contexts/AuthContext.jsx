@@ -28,16 +28,21 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, password) {
-    const { data } = await api.post('/auth/login', { email, password });
+    const { data } = await api.post('/auth/login', { email, senha: password });
     localStorage.setItem('token', data.token);
-    setUser(data.user);
+    setUser({ id: data.id, nome: data.nome, email: data.email, tipo: data.tipo });
     return data;
   }
 
   async function register(userData) {
     const { data } = await api.post('/auth/register', userData);
+    return data;
+  }
+
+  async function verify(email, codigo) {
+    const { data } = await api.post('/auth/verify', { email, codigo });
     localStorage.setItem('token', data.token);
-    setUser(data.user);
+    setUser({ id: data.id, nome: data.nome, email: data.email, tipo: data.tipo });
     return data;
   }
 
@@ -47,7 +52,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verify, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -55,8 +60,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
+  if (!context) throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   return context;
 }

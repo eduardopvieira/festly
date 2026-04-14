@@ -4,6 +4,7 @@ import AuthLayout from '../layouts/AuthLayout';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
+import VerifyEmail from '../pages/VerifyEmail';
 import Services from '../pages/Services';
 import NotFound from '../pages/NotFound';
 
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
+      { path: '/verify-email', element: <VerifyEmail /> },
     ],
   },
 ]);

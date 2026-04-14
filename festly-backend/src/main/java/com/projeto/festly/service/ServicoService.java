@@ -3,9 +3,10 @@ package com.projeto.festly.service;
 import com.projeto.festly.dto.ServicoRequest;
 import com.projeto.festly.dto.ServicoResponse;
 import com.projeto.festly.entity.CategoriaServico;
-import com.projeto.festly.entity.Fornecedor;
 import com.projeto.festly.entity.Servico;
+import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.repository.ServicoRepository;
+import com.projeto.festly.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,17 +19,18 @@ import java.util.List;
 public class ServicoService {
 
     private final ServicoRepository repository;
-    private final FornecedorService fornecedorService;
+    private final UsuarioRepository usuarioRepository;
 
     public ServicoResponse criar(ServicoRequest request) {
-        Fornecedor fornecedor = fornecedorService.buscarEntidade(request.getFornecedorId());
+        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado: " + request.getUsuarioId()));
         Servico servico = Servico.builder()
                 .nome(request.getNome())
                 .descricao(request.getDescricao())
                 .preco(request.getPreco())
                 .categoria(request.getCategoria())
                 .disponivel(request.isDisponivel())
-                .fornecedor(fornecedor)
+                .usuario(usuario)
                 .build();
         return ServicoResponse.from(repository.save(servico));
     }
@@ -48,21 +50,22 @@ public class ServicoService {
         return ServicoResponse.from(buscarEntidade(id));
     }
 
-    public List<ServicoResponse> listarPorFornecedor(Long fornecedorId) {
-        return repository.findByFornecedor_Id(fornecedorId).stream()
+    public List<ServicoResponse> listarPorUsuario(Long usuarioId) {
+        return repository.findByUsuario_Id(usuarioId).stream()
                 .map(ServicoResponse::from)
                 .toList();
     }
 
     public ServicoResponse atualizar(Long id, ServicoRequest request) {
-        Fornecedor fornecedor = fornecedorService.buscarEntidade(request.getFornecedorId());
+        Usuario usuario = usuarioRepository.findById(request.getUsuarioId())
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado: " + request.getUsuarioId()));
         Servico servico = buscarEntidade(id);
         servico.setNome(request.getNome());
         servico.setDescricao(request.getDescricao());
         servico.setPreco(request.getPreco());
         servico.setCategoria(request.getCategoria());
         servico.setDisponivel(request.isDisponivel());
-        servico.setFornecedor(fornecedor);
+        servico.setUsuario(usuario);
         return ServicoResponse.from(repository.save(servico));
     }
 

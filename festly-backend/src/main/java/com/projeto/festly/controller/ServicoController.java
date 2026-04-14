@@ -38,9 +38,9 @@ public class ServicoController {
         return service.buscarPorId(id);
     }
 
-    @GetMapping("/fornecedor/{fornecedorId}")
-    public List<ServicoResponse> listarPorFornecedor(@PathVariable Long fornecedorId) {
-        return service.listarPorFornecedor(fornecedorId);
+    @GetMapping("/usuario/{usuarioId}")
+    public List<ServicoResponse> listarPorUsuario(@PathVariable Long usuarioId) {
+        return service.listarPorUsuario(usuarioId);
     }
 
     @PutMapping("/{id}")

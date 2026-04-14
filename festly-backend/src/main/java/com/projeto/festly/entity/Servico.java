@@ -35,6 +35,6 @@ public class Servico {
     private boolean disponivel;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fornecedor_id", nullable = false)
-    private Fornecedor fornecedor;
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 }

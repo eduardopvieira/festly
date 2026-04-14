@@ -23,6 +23,6 @@ public class ServicoRequest {
 
     private boolean disponivel = true;
 
-    @NotNull(message = "ID do fornecedor é obrigatório")
-    private Long fornecedorId;
+    @NotNull(message = "ID do usuário é obrigatório")
+    private Long usuarioId;
 }
