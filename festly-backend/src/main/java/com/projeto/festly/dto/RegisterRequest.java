@@ -1,5 +1,7 @@
 package com.projeto.festly.dto;
 
+import com.projeto.festly.validator.ValidCNPJ;
+import com.projeto.festly.validator.ValidCPF;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -18,6 +20,9 @@ public class RegisterRequest {
     @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     private String senha;
 
+    @ValidCPF
     private String cpf;
+
+    @ValidCNPJ
     private String cnpj;
 }

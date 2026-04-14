@@ -8,6 +8,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '../contexts/AuthContext';
+import { maskCpf, maskCnpj, isValidCpf, isValidCnpj } from '@/lib/validators';
 
 const schema = z.object({
   nome: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
@@ -16,17 +17,27 @@ const schema = z.object({
   confirmarSenha: z.string(),
   cpf: z.string().optional(),
   cnpj: z.string().optional(),
-}).refine(data => data.senha === data.confirmarSenha, {
-  message: 'As senhas não coincidem',
-  path: ['confirmarSenha'],
-}).refine(data => {
-  const temCpf = data.cpf && data.cpf.trim().length > 0;
-  const temCnpj = data.cnpj && data.cnpj.trim().length > 0;
-  return temCpf || temCnpj;
-}, {
-  message: 'Informe o CPF (pessoa física) ou o CNPJ (empresa/MEI)',
-  path: ['cpf'],
-});
+})
+  .refine(data => data.senha === data.confirmarSenha, {
+    message: 'As senhas não coincidem',
+    path: ['confirmarSenha'],
+  })
+  .refine(data => {
+    const temCpf = data.cpf && data.cpf.trim().length > 0;
+    const temCnpj = data.cnpj && data.cnpj.trim().length > 0;
+    return temCpf || temCnpj;
+  }, {
+    message: 'Informe o CPF (pessoa física) ou o CNPJ (empresa/MEI)',
+    path: ['cpf'],
+  })
+  .refine(data => {
+    if (!data.cpf || data.cpf.trim() === '') return true;
+    return isValidCpf(data.cpf);
+  }, { message: 'CPF inválido', path: ['cpf'] })
+  .refine(data => {
+    if (!data.cnpj || data.cnpj.trim() === '') return true;
+    return isValidCnpj(data.cnpj);
+  }, { message: 'CNPJ inválido', path: ['cnpj'] });
 
 function getPasswordStrength(password) {
   if (!password || password.length < 6) return null;
@@ -50,7 +61,7 @@ export default function Register() {
   const [senhaValue, setSenhaValue] = useState('');
   const [formError, setFormError] = useState('');
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
   });
 
@@ -63,8 +74,8 @@ export default function Register() {
         nome: values.nome,
         email: values.email,
         senha: values.senha,
-        cpf: values.cpf || null,
-        cnpj: values.cnpj || null,
+        cpf: values.cpf ? values.cpf.replace(/\D/g, '') : null,
+        cnpj: values.cnpj ? values.cnpj.replace(/\D/g, '') : null,
       };
       await registerAuth(payload);
       toast.success('Cadastro realizado! Verifique seu e-mail.');
@@ -160,7 +171,15 @@ export default function Register() {
           <label className="text-sm font-medium">
             CPF <span className="text-muted-foreground font-normal">(pessoa física)</span>
           </label>
-          <Input placeholder="000.000.000-00" {...register('cpf')} />
+          <Input
+            placeholder="000.000.000-00"
+            {...register('cpf')}
+            onChange={(e) => {
+              const masked = maskCpf(e.target.value);
+              e.target.value = masked;
+              setValue('cpf', masked, { shouldValidate: false });
+            }}
+          />
           {errors.cpf && <p className="text-xs text-destructive">{errors.cpf.message}</p>}
         </div>
 
@@ -169,7 +188,15 @@ export default function Register() {
           <label className="text-sm font-medium">
             CNPJ <span className="text-muted-foreground font-normal">(empresa/MEI)</span>
           </label>
-          <Input placeholder="00.000.000/0000-00" {...register('cnpj')} />
+          <Input
+            placeholder="00.000.000/0000-00"
+            {...register('cnpj')}
+            onChange={(e) => {
+              const masked = maskCnpj(e.target.value);
+              e.target.value = masked;
+              setValue('cnpj', masked, { shouldValidate: false });
+            }}
+          />
           {errors.cnpj && <p className="text-xs text-destructive">{errors.cnpj.message}</p>}
         </div>
 
