@@ -73,6 +73,8 @@ public class ServicoService {
         servico.setPreco(request.getPreco());
         servico.setCategoria(request.getCategoria());
         servico.setDisponivel(request.isDisponivel());
+        servico.setCidade(request.getCidade());
+        servico.setTipoCobranca(request.getTipoCobranca());
         servico.setUsuario(usuario);
         return ServicoResponse.from(repository.save(servico));
     }
