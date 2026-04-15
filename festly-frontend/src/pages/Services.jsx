@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom'; 
+import { Plus } from 'lucide-react';
 
 const mockServices = [
   { id: 1, name: 'Decorações Encantadas', category: 'Decoração', rating: 4.8, reviews: 124, city: 'Mossoró', price: 'A partir de R$ 1.200' },
@@ -16,7 +19,10 @@ const mockServices = [
 ];
 
 export default function Services() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+
+  console.log("DADOS DO USUÁRIO:", user);
 
   const filtered = mockServices.filter((s) =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,9 +31,22 @@ export default function Services() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Serviços</h1>
-        <p className="mt-2 text-muted-foreground">Encontre o profissional perfeito para o seu evento.</p>
+      {/* NOVO CABEÇALHO COM FLEX-BETWEEN */}
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Serviços</h1>
+          <p className="mt-2 text-muted-foreground">Encontre o profissional perfeito para o seu evento.</p>
+        </div>
+        
+        {/* BOTÃO DE CADASTRO DE SERVICO PARA PRESTADOR */}
+        {user?.tipoUsuario === 'PRESTADOR' && (     
+          <Button asChild size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
+            <Link to="/services/new">
+              <Plus className="h-5 w-5" />
+              Cadastrar Serviço
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-8">

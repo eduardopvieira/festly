@@ -7,6 +7,7 @@ import Register from '../pages/Register';
 import VerifyEmail from '../pages/VerifyEmail';
 import Services from '../pages/Services';
 import NotFound from '../pages/NotFound';
+import ServiceRegister from '@/pages/ServiceRegister';
 
 const router = createBrowserRouter([
   {
@@ -14,6 +15,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Home /> },
       { path: '/services', element: <Services /> },
+      { path: '/services/new', element: <ServiceRegister /> },
       { path: '*', element: <NotFound /> },
     ],
   },
