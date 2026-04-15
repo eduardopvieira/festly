@@ -39,8 +39,8 @@ public class Usuario implements UserDetails {
     private String cnpj;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TipoUsuario tipo;
+    @Column(name = "tipo_usuario", nullable = false)
+    private TipoUsuario tipoUsuario;
 
     @Builder.Default
     @Column(nullable = false)
@@ -52,7 +52,7 @@ public class Usuario implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + tipo.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + tipoUsuario.name()));
     }
 
     @Override

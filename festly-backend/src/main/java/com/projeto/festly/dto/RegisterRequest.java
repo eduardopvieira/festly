@@ -1,9 +1,11 @@
 package com.projeto.festly.dto;
 
+import com.projeto.festly.entity.TipoUsuario;
 import com.projeto.festly.validator.ValidCNPJ;
 import com.projeto.festly.validator.ValidCPF;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -19,6 +21,9 @@ public class RegisterRequest {
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     private String senha;
+
+    @NotNull(message = "O tipo de usuário deve ser informado")
+    private TipoUsuario tipoUsuario;
 
     @ValidCPF
     private String cpf;

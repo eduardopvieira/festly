@@ -16,7 +16,7 @@ public class UsuarioResponse {
         r.setId(usuario.getId());
         r.setNome(usuario.getNome());
         r.setEmail(usuario.getEmail());
-        r.setTipo(usuario.getTipo());
+        r.setTipo(usuario.getTipoUsuario());
         return r;
     }
 }
