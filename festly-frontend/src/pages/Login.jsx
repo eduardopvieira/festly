@@ -27,7 +27,7 @@ export default function Login() {
     setFormError('');
     try {
       await login(values.email, values.password);
-      navigate('/');
+      navigate('/services');
     } catch (err) {
       const status = err.response?.status;
       const mensagem = err.response?.data?.erro;
