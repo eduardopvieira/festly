@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { maskCpf, maskCnpj, isValidCpf, isValidCnpj } from '@/lib/validators';
 
 const schema = z.object({
+  tipoUsuario: z.enum(['CLIENTE', 'PRESTADOR']),
   nome: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   senha: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
@@ -23,12 +24,12 @@ const schema = z.object({
     path: ['confirmarSenha'],
   })
   .refine(data => {
-    const temCpf = data.cpf && data.cpf.trim().length > 0;
-    const temCnpj = data.cnpj && data.cnpj.trim().length > 0;
-    return temCpf || temCnpj;
+    if (data.tipoUsuario === 'CLIENTE') return !!data.cpf && isValidCpf(data.cpf);
+    if (data.tipoUsuario === 'PRESTADOR') return !!data.cnpj && isValidCnpj(data.cnpj);
+    return true;
   }, {
-    message: 'Informe o CPF (pessoa física) ou o CNPJ (empresa/MEI)',
-    path: ['cpf'],
+    message: 'Documento inválido ou obrigatório.',
+    path: ['tipoUsuario'],
   })
   .refine(data => {
     if (!data.cpf || data.cpf.trim() === '') return true;
@@ -56,6 +57,7 @@ function getPasswordStrength(password) {
 export default function Register() {
   const { register: registerAuth } = useAuth();
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState('CLIENTE')
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [senhaValue, setSenhaValue] = useState('');
@@ -63,7 +65,22 @@ export default function Register() {
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: { 
+      tipoUsuario: 'CLIENTE',
+      nome: '',
+      email: '',
+      senha: '',
+      confirmarSenha: ''
+    }
   });
+
+  const handleRoleChange = (role) => {
+    setUserRole(role);
+    setValue('tipoUsuario', role, { shouldValidate: true });
+    
+    if (role === 'CLIENTE') setValue('cnpj', '');
+    if (role === 'PRESTADOR') setValue('cpf', '');
+  };
 
   const strength = getPasswordStrength(senhaValue);
 
@@ -74,6 +91,7 @@ export default function Register() {
         nome: values.nome,
         email: values.email,
         senha: values.senha,
+        tipoUsuario: values.tipoUsuario,
         cpf: values.cpf ? values.cpf.replace(/\D/g, '') : null,
         cnpj: values.cnpj ? values.cnpj.replace(/\D/g, '') : null,
       };
@@ -91,6 +109,29 @@ export default function Register() {
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-bold">Criar conta</h1>
         <p className="text-sm text-muted-foreground mt-1">Junte-se à Festly gratuitamente</p>
+      </div>
+
+
+      {/* SELETOR DO TIPO DE USUARIO */}
+      <div className="flex p-1 bg-muted rounded-lg mb-6">
+        <button
+          type="button"
+          onClick={() => handleRoleChange('CLIENTE')}
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+            userRole === 'CLIENTE' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Sou Cliente
+        </button>
+        <button
+          type="button"
+          onClick={() => handleRoleChange('PRESTADOR')}
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+            userRole === 'PRESTADOR' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Sou Prestador
+        </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -166,41 +207,38 @@ export default function Register() {
           {errors.confirmarSenha && <p className="text-xs text-destructive">{errors.confirmarSenha.message}</p>}
         </div>
 
-        {/* CPF */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            CPF <span className="text-muted-foreground font-normal">(pessoa física)</span>
-          </label>
-          <Input
-            placeholder="000.000.000-00"
-            {...register('cpf')}
-            onChange={(e) => {
-              const masked = maskCpf(e.target.value);
-              e.target.value = masked;
-              setValue('cpf', masked, { shouldValidate: false });
-            }}
-          />
-          {errors.cpf && <p className="text-xs text-destructive">{errors.cpf.message}</p>}
+        {/* CPF OU CNPJ */}
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {userRole === 'CLIENTE' ? (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">CPF</label>
+              <Input
+                placeholder="000.000.000-00"
+                {...register('cpf')}
+                onChange={(e) => {
+                  const masked = maskCpf(e.target.value);
+                  e.target.value = masked;
+                  setValue('cpf', masked);
+                }}
+              />
+              {errors.cpf && <p className="text-xs text-destructive">{errors.cpf.message}</p>}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">CNPJ</label>
+              <Input
+                placeholder="00.000.000/0000-00"
+                {...register('cnpj')}
+                onChange={(e) => {
+                  const masked = maskCnpj(e.target.value);
+                  e.target.value = masked;
+                  setValue('cnpj', masked);
+                }}
+              />
+              {errors.cnpj && <p className="text-xs text-destructive">{errors.cnpj.message}</p>}
+            </div>
+          )}
         </div>
-
-        {/* CNPJ */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            CNPJ <span className="text-muted-foreground font-normal">(empresa/MEI)</span>
-          </label>
-          <Input
-            placeholder="00.000.000/0000-00"
-            {...register('cnpj')}
-            onChange={(e) => {
-              const masked = maskCnpj(e.target.value);
-              e.target.value = masked;
-              setValue('cnpj', masked, { shouldValidate: false });
-            }}
-          />
-          {errors.cnpj && <p className="text-xs text-destructive">{errors.cnpj.message}</p>}
-        </div>
-
-        <p className="text-xs text-muted-foreground -mt-1">Preencha ao menos um dos documentos acima.</p>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
