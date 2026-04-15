@@ -6,6 +6,9 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import VerifyEmail from '../pages/VerifyEmail';
 import Services from '../pages/Services';
+import MeusServicos from '../pages/MeusServicos';
+import NovoServico from '../pages/NovoServico';
+import EditarServico from '../pages/EditarServico';
 import NotFound from '../pages/NotFound';
 
 const router = createBrowserRouter([
@@ -14,6 +17,9 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Home /> },
       { path: '/services', element: <Services /> },
+      { path: '/meus-servicos', element: <MeusServicos /> },
+      { path: '/meus-servicos/novo', element: <NovoServico /> },
+      { path: '/meus-servicos/editar/:id', element: <EditarServico /> },
       { path: '*', element: <NotFound /> },
     ],
   },
