@@ -37,4 +37,14 @@ public class Servico {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
+    
+    @Column(nullable = false)
+    private String cidade;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_cobranca", nullable = false)
+    private TipoCobranca tipoCobranca;
+
+    @Column(name = "imagem_capa", length = 500)
+    private String imagemCapa;
 }

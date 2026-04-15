@@ -2,6 +2,7 @@ package com.projeto.festly.dto;
 
 import com.projeto.festly.entity.CategoriaServico;
 import com.projeto.festly.entity.Servico;
+import com.projeto.festly.entity.TipoCobranca;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,6 +17,9 @@ public class ServicoResponse {
     private CategoriaServico categoria;
     private boolean disponivel;
     private Long usuarioId;
+    private String cidade;
+    private TipoCobranca tipoCobranca;
+    private String imagemCapa;
 
     public static ServicoResponse from(Servico servico) {
         ServicoResponse response = new ServicoResponse();
@@ -26,6 +30,9 @@ public class ServicoResponse {
         response.setCategoria(servico.getCategoria());
         response.setDisponivel(servico.isDisponivel());
         response.setUsuarioId(servico.getUsuario().getId());
+        response.setCidade(servico.getCidade());
+        response.setTipoCobranca(servico.getTipoCobranca());
+        response.setImagemCapa(servico.getImagemCapa());
         return response;
     }
 }

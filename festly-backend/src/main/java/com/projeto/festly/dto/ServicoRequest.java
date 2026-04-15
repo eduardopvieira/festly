@@ -1,6 +1,7 @@
 package com.projeto.festly.dto;
 
 import com.projeto.festly.entity.CategoriaServico;
+import com.projeto.festly.entity.TipoCobranca;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -25,4 +26,13 @@ public class ServicoRequest {
 
     @NotNull(message = "ID do usuário é obrigatório")
     private Long usuarioId;
+
+    @NotBlank(message = "A cidade é obrigatória")
+    private String cidade;
+
+    @NotNull(message = "O tipo de cobrança é obrigatório")
+    private TipoCobranca tipoCobranca;
+
+    private String imagemCapa;
+
 }

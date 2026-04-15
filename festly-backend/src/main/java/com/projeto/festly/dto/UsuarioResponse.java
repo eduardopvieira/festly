@@ -9,14 +9,14 @@ public class UsuarioResponse {
     private Long id;
     private String nome;
     private String email;
-    private TipoUsuario tipo;
+    private TipoUsuario tipoUsuario;
 
     public static UsuarioResponse from(Usuario usuario) {
         UsuarioResponse r = new UsuarioResponse();
         r.setId(usuario.getId());
         r.setNome(usuario.getNome());
         r.setEmail(usuario.getEmail());
-        r.setTipo(usuario.getTipoUsuario());
+        r.setTipoUsuario(usuario.getTipoUsuario());
         return r;
     }
 }

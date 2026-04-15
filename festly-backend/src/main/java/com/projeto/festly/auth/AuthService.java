@@ -36,7 +36,7 @@ public class AuthService {
             throw new IllegalStateException("Email já cadastrado");
         }
 
-        String codigo = generateCode();
+        String codigo = "111111"; //generateCode(); <-- descomentar antes de comittar
 
         Usuario usuario = Usuario.builder()
                 .nome(request.getNome())
@@ -44,14 +44,14 @@ public class AuthService {
                 .senha(passwordEncoder.encode(request.getSenha()))
                 .cpf(temCpf ? request.getCpf().replaceAll("\\D", "") : null)
                 .cnpj(temCnpj ? request.getCnpj().replaceAll("\\D", "") : null)
-                .tipo(com.projeto.festly.entity.TipoUsuario.CLIENTE)
+                .tipoUsuario(request.getTipoUsuario())
                 .verificado(false)
                 .codigoVerificacao(codigo)
                 .codigoExpiracao(LocalDateTime.now().plusMinutes(15))
                 .build();
 
         usuarioRepository.save(usuario);
-        sendVerificationEmail(usuario.getEmail(), usuario.getNome(), codigo);
+        //sendVerificationEmail(usuario.getEmail(), usuario.getNome(), codigo);
     }
 
     public AuthResponse verify(VerifyRequest request) {
@@ -81,7 +81,7 @@ public class AuthService {
                 .id(usuario.getId())
                 .nome(usuario.getNome())
                 .email(usuario.getEmail())
-                .tipo(usuario.getTipo())
+                .tipoUsuario(usuario.getTipoUsuario())
                 .build();
     }
 
@@ -99,7 +99,7 @@ public class AuthService {
                 .id(usuario.getId())
                 .nome(usuario.getNome())
                 .email(usuario.getEmail())
-                .tipo(usuario.getTipo())
+                .tipoUsuario(usuario.getTipoUsuario())
                 .build();
     }
 
