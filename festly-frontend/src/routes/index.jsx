@@ -10,6 +10,7 @@ import MeusServicos from '../pages/MeusServicos';
 import NovoServico from '../pages/NovoServico';
 import EditarServico from '../pages/EditarServico';
 import NotFound from '../pages/NotFound';
+import ServiceRegister from '@/pages/ServiceRegister';
 
 const router = createBrowserRouter([
   {
