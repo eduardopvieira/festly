@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "servicos")
@@ -37,7 +39,7 @@ public class Servico {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
-    
+
     @Column(nullable = false)
     private String cidade;
 
@@ -47,4 +49,9 @@ public class Servico {
 
     @Column(name = "imagem_capa", length = 500)
     private String imagemCapa;
+
+    @OneToMany(mappedBy = "servico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("ordem ASC")
+    @Builder.Default
+    private List<ServicoFoto> fotos = new ArrayList<>();
 }

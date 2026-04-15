@@ -6,6 +6,7 @@ import com.projeto.festly.entity.TipoCobranca;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 public class ServicoResponse {
@@ -19,7 +20,7 @@ public class ServicoResponse {
     private Long usuarioId;
     private String cidade;
     private TipoCobranca tipoCobranca;
-    private String imagemCapa;
+    private List<ServicoFotoResponse> fotos;
 
     public static ServicoResponse from(Servico servico) {
         ServicoResponse response = new ServicoResponse();
@@ -32,7 +33,9 @@ public class ServicoResponse {
         response.setUsuarioId(servico.getUsuario().getId());
         response.setCidade(servico.getCidade());
         response.setTipoCobranca(servico.getTipoCobranca());
-        response.setImagemCapa(servico.getImagemCapa());
+        response.setFotos(servico.getFotos().stream()
+                .map(ServicoFotoResponse::from)
+                .toList());
         return response;
     }
 }
