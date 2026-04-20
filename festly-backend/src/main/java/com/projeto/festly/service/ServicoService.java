@@ -29,9 +29,17 @@ public class ServicoService {
                 .descricao(request.getDescricao())
                 .preco(request.getPreco())
                 .categoria(request.getCategoria())
+                .cidade(request.getCidade())
+                .tipoCobranca(request.getTipoCobranca())
+                .imagemCapa(request.getImagemCapa())
                 .disponivel(request.isDisponivel())
                 .usuario(usuario)
                 .build();
+
+        servico.setCidade(request.getCidade());
+        servico.setTipoCobranca(request.getTipoCobranca());
+        servico.setImagemCapa(request.getImagemCapa());
+
         return ServicoResponse.from(repository.save(servico));
     }
 
@@ -65,6 +73,8 @@ public class ServicoService {
         servico.setPreco(request.getPreco());
         servico.setCategoria(request.getCategoria());
         servico.setDisponivel(request.isDisponivel());
+        servico.setCidade(request.getCidade());
+        servico.setTipoCobranca(request.getTipoCobranca());
         servico.setUsuario(usuario);
         return ServicoResponse.from(repository.save(servico));
     }

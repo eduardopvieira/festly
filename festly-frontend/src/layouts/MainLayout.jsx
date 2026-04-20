@@ -11,14 +11,17 @@ import {
 } from '@/components/ui/sheet';
 import { useAuth } from '../contexts/AuthContext';
 
-const navLinks = [
-  { to: '/services', label: 'Serviços' },
-  { to: '/how-it-works', label: 'Como funciona' },
-  { to: '/about', label: 'Sobre' },
-];
-
 export default function MainLayout() {
   const { user, logout } = useAuth();
+
+  const navLinks = [
+    { to: '/services', label: 'Serviços' },
+    ...(user?.tipoUsuario === 'PRESTADOR'
+      ? [{ to: '/meus-servicos', label: 'Meus Serviços' }]
+      : []),
+    { to: '/how-it-works', label: 'Como funciona' },
+    { to: '/about', label: 'Sobre' },
+  ];
   const navigate = useNavigate();
   const location = useLocation();
 

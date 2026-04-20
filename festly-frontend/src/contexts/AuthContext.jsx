@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const { data } = await api.post('/auth/login', { email, senha: password });
     localStorage.setItem('token', data.token);
-    setUser({ id: data.id, nome: data.nome, email: data.email, tipo: data.tipo });
+    setUser({ id: data.id, nome: data.nome, email: data.email, tipoUsuario: data.tipoUsuario });
     return data;
   }
 
@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
   async function verify(email, codigo) {
     const { data } = await api.post('/auth/verify', { email, codigo });
     localStorage.setItem('token', data.token);
-    setUser({ id: data.id, nome: data.nome, email: data.email, tipo: data.tipo });
+    setUser({ id: data.id, nome: data.nome, email: data.email, tipoUsuario: data.tipoUsuario });
     return data;
   }
 

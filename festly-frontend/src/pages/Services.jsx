@@ -1,27 +1,60 @@
-import { Search, Filter, MapPin, Star, PartyPopper } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Filter } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import ServicoCard from '../components/ServicoCard';
+import { listarServicos } from '../services/servicoService';
 
-const mockServices = [
-  { id: 1, name: 'Decorações Encantadas', category: 'Decoração', rating: 4.8, reviews: 124, city: 'Mossoró', price: 'A partir de R$ 1.200' },
-  { id: 2, name: 'Buffet Sabor & Arte', category: 'Buffet', rating: 4.9, reviews: 87, city: 'Natal', price: 'A partir de R$ 45/pessoa' },
-  { id: 3, name: 'DJ Paulo Silva', category: 'Som e Iluminação', rating: 4.7, reviews: 56, city: 'Apodi', price: 'A partir de R$ 800' },
-  { id: 4, name: 'Foto Momentos', category: 'Fotografia', rating: 4.6, reviews: 203, city: 'Parnamirim', price: 'A partir de R$ 1.500' },
-  { id: 5, name: 'Doce Festa', category: 'Bolos e Doces', rating: 5.0, reviews: 42, city: 'Caicó', price: 'A partir de R$ 300' },
-  { id: 6, name: 'Anima Kids', category: 'Animação', rating: 4.5, reviews: 68, city: 'Açu', price: 'A partir de R$ 500' },
-];
+const CATEGORIA_LABEL = {
+  BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
+  FOTOGRAFIA: 'Fotografia', ILUMINACAO: 'Iluminação', SOM: 'Som',
+  SEGURANCA: 'Segurança', ANIMACAO: 'Animação', OUTROS: 'Outros',
+};
 
 export default function Services() {
+  const [servicos, setServicos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filtered = mockServices.filter((s) =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    listarServicos({ disponivel: true })
+      .then(({ data }) => setServicos(data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = servicos.filter((s) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      s.nome.toLowerCase().includes(term) ||
+      (CATEGORIA_LABEL[s.categoria] ?? s.categoria).toLowerCase().includes(term)
+    );
+  });
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Serviços</h1>
+          <p className="mt-2 text-muted-foreground">Encontre o profissional perfeito para o seu evento.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-52 rounded-lg bg-muted animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 text-center">
+        <p className="text-muted-foreground">Não foi possível carregar os serviços. Tente novamente mais tarde.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -47,32 +80,8 @@ export default function Services() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((service) => (
-          <Card key={service.id} className="group cursor-pointer overflow-hidden transition-all hover:shadow-md py-0">
-            <div className="h-36 bg-gradient-to-br from-primary/8 to-primary/3 flex items-center justify-center">
-              <PartyPopper className="h-10 w-10 text-primary/20" />
-            </div>
-            <CardContent className="p-4 space-y-3">
-              <Badge variant="secondary" className="text-xs">
-                {service.category}
-              </Badge>
-              <h3 className="font-semibold group-hover:text-primary transition-colors">
-                {service.name}
-              </h3>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {service.city}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {service.rating} ({service.reviews})
-                </span>
-              </div>
-              <Separator />
-              <p className="text-sm font-medium text-primary">{service.price}</p>
-            </CardContent>
-          </Card>
+        {filtered.map((s) => (
+          <ServicoCard key={s.id} servico={s} />
         ))}
       </div>
 
