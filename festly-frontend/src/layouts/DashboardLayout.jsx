@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, User, Globe, Search, Menu, PartyPopper, LogOut,
+  LayoutDashboard, Briefcase, User, Globe, Search, Menu, PartyPopper, LogOut, ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet, SheetContent, SheetTrigger, SheetTitle,
 } from '@/components/ui/sheet';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 const PRESTADOR_ONLY_PATHS = ['/meus-servicos'];
 
@@ -57,6 +58,7 @@ function SidebarNav({ navItems, collapsed, isActive, onItemClick }) {
 
 export default function DashboardLayout() {
   const { user, loading, logout } = useAuth();
+  const { itemCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -149,6 +151,18 @@ export default function DashboardLayout() {
 
           {/* User info */}
           <div className="ml-auto flex items-center gap-2">
+            {(
+              <Link to="/dashboard/carrinho">
+                <Button variant="ghost" size="icon-sm" className="relative" aria-label="Carrinho">
+                  <ShoppingCart className="h-5 w-5" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+                      {itemCount > 9 ? '9+' : itemCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold select-none">
               {avatar}
             </div>

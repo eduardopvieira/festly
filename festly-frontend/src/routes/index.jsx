@@ -12,6 +12,7 @@ import Perfil from '../pages/Perfil';
 import MeusServicos from '../pages/MeusServicos';
 import NovoServico from '../pages/NovoServico';
 import EditarServico from '../pages/EditarServico';
+import Carrinho from '../pages/Carrinho';
 import NotFound from '../pages/NotFound';
 
 const router = createBrowserRouter([
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       { path: '/meus-servicos', element: <MeusServicos /> },
       { path: '/meus-servicos/novo', element: <NovoServico /> },
       { path: '/meus-servicos/editar/:id', element: <EditarServico /> },
+      { path: '/dashboard/carrinho', element: <Carrinho /> },
     ],
   },
 ]);

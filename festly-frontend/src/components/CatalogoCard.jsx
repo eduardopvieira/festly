@@ -1,4 +1,9 @@
+import { useState } from 'react';
+import { ShoppingCart, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -36,6 +41,21 @@ export default function CatalogoCard({ servico }) {
   const { formatted, suffix } = formatPrice(servico.preco, servico.tipoCobranca);
   const disponivel = servico.disponivel !== false;
 
+  const { user } = useAuth();
+  const { isInCart, addItem } = useCart();
+  const inCart = isInCart(servico.id);
+  const [adding, setAdding] = useState(false);
+
+  async function handleAddToCart() {
+    if (inCart || adding) return;
+    setAdding(true);
+    try {
+      await addItem(servico.id);
+    } finally {
+      setAdding(false);
+    }
+  }
+
   return (
     <Card className={`transition-all hover:shadow-md py-0 ${!disponivel ? 'opacity-60' : ''}`}>
       <CardContent className="p-4 flex gap-4">
@@ -54,7 +74,7 @@ export default function CatalogoCard({ servico }) {
               <p className="font-semibold text-sm leading-tight">{servico.nome}</p>
               <p className="text-xs text-primary mt-0.5">
                 {CATEGORIA_LABEL[servico.categoria] ?? servico.categoria}
-                {servico.cidade && <> · 📍 {servico.cidade}</>}
+                {servico.cidade && <> · {servico.cidade}</>}
               </p>
             </div>
             <div className="text-right shrink-0">
@@ -69,16 +89,37 @@ export default function CatalogoCard({ servico }) {
             </p>
           )}
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
-            {disponivel ? (
-              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                ● Disponível
-              </span>
-            ) : (
-              <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                Indisponível
-              </span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
+              {disponivel ? (
+                <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  Disponível
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                  Indisponível
+                </span>
+              )}
+            </div>
+
+            {user && (
+              <Button
+                size="sm"
+                variant={inCart ? 'secondary' : 'default'}
+                className={`h-7 text-xs gap-1.5 ${inCart ? 'text-emerald-600' : ''}`}
+                onClick={handleAddToCart}
+                disabled={inCart || adding}
+              >
+                {adding ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : inCart ? (
+                  <Check className="h-3 w-3" />
+                ) : (
+                  <ShoppingCart className="h-3 w-3" />
+                )}
+                {inCart ? 'No carrinho' : 'Adicionar'}
+              </Button>
             )}
           </div>
         </div>
