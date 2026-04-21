@@ -1,9 +1,11 @@
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ServicoCard from '../components/ServicoCard';
 import { listarServicos } from '../services/servicoService';
+import { useAuth } from '../contexts/AuthContext';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -12,6 +14,7 @@ const CATEGORIA_LABEL = {
 };
 
 export default function Services() {
+  const { user } = useAuth();
   const [servicos, setServicos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

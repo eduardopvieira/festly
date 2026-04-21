@@ -21,12 +21,6 @@ export default function EditarServico() {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-    if (user.tipoUsuario !== 'PRESTADOR') {
-      toast.error('Acesso restrito a prestadores.');
-      navigate('/');
-      return;
-    }
     buscarServico(id)
       .then(({ data }) => {
         setDefaultValues({
@@ -44,7 +38,7 @@ export default function EditarServico() {
         toast.error('Serviço não encontrado.');
         navigate('/meus-servicos');
       });
-  }, [user, navigate, id]);
+  }, [id]);
 
   async function onSubmit(values) {
     setIsSubmitting(true);
