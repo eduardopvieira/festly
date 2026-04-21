@@ -15,12 +15,12 @@ const PRESTADOR_NAV = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
   { icon: Briefcase,       label: 'Meus Serviços', to: '/meus-servicos' },
   { icon: User,            label: 'Perfil', to: '/perfil' },
-  { icon: Globe,           label: 'Ver catálogo', to: '/services' },
+  { icon: Globe,           label: 'Ver catálogo', to: '/dashboard/servicos' },
 ];
 
 const CLIENTE_NAV = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
-  { icon: Search,          label: 'Explorar Serviços', to: '/services' },
+  { icon: Search,          label: 'Explorar Serviços', to: '/dashboard/servicos' },
   { icon: User,            label: 'Perfil', to: '/perfil' },
 ];
 

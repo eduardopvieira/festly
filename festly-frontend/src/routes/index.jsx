@@ -19,6 +19,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { path: '/', element: <Home /> },
+      { path: '/catalogo', element: <Services /> },
       { path: '/services', element: <Services /> },
       { path: '*', element: <NotFound /> },
     ],
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
     element: <DashboardLayout />,
     children: [
       { path: '/dashboard', element: <Dashboard /> },
+      { path: '/dashboard/servicos', element: <Services /> },
       { path: '/perfil', element: <Perfil /> },
       { path: '/meus-servicos', element: <MeusServicos /> },
       { path: '/meus-servicos/novo', element: <NovoServico /> },

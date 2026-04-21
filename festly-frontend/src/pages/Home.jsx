@@ -115,7 +115,7 @@ export default function Home() {
                   className="pl-10 h-11 bg-background"
                 />
               </div>
-              <Link to="/services">
+              <Link to="/catalogo">
                 <Button size="lg" className="gap-2 w-full sm:w-auto">
                   Buscar
                   <ArrowRight className="h-4 w-4" />
@@ -157,7 +157,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map(({ icon: Icon, name, slug, count }) => (
-              <Link key={slug} to={`/services?cat=${slug}`}>
+              <Link key={slug} to={`/catalogo?cat=${slug}`}>
                 <Card className="group cursor-pointer transition-all hover:shadow-md hover:border-primary/30 py-0">
                   <CardContent className="flex items-center gap-4 p-5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
@@ -228,7 +228,7 @@ export default function Home() {
                 Prestadores mais bem avaliados da plataforma.
               </p>
             </div>
-            <Link to="/services" className="hidden sm:block">
+            <Link to="/catalogo" className="hidden sm:block">
               <Button variant="outline" size="sm" className="gap-1.5">
                 Ver todos
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -267,7 +267,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 sm:hidden text-center">
-            <Link to="/services">
+            <Link to="/catalogo">
               <Button variant="outline" className="gap-1.5">
                 Ver todos os serviços
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -377,7 +377,7 @@ export default function Home() {
             Junte-se a milhares de pessoas que já encontraram os melhores serviços para seus eventos.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/services">
+            <Link to="/catalogo">
               <Button size="lg" className="gap-2">
                 <Search className="h-4 w-4" />
                 Encontrar serviços
