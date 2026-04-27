@@ -8,7 +8,7 @@ import { Loader2, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '../contexts/AuthContext';
-import api from '@/lib/api';
+// import api from '@/lib/api';
 
 const schema = z.object({
   nome: z.string().min(3, 'O nome deve ter no mínimo 3 caracteres'),

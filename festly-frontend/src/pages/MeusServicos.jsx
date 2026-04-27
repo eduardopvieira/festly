@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Plus, Package, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,24 +20,17 @@ import ServicoCard from '../components/ServicoCard';
 
 export default function MeusServicos() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [servicos, setServicos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [servicoParaExcluir, setServicoParaExcluir] = useState(null);
   const [excluindo, setExcluindo] = useState(false);
 
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-    if (user.tipoUsuario !== 'PRESTADOR') {
-      toast.error('Acesso restrito a prestadores.');
-      navigate('/');
-      return;
-    }
     listarMeusServicos(user.id)
       .then(({ data }) => setServicos(data))
       .catch(() => toast.error('Erro ao carregar seus serviços.'))
       .finally(() => setLoading(false));
-  }, [user, navigate]);
+  }, [user.id]);
 
   async function confirmarExclusao() {
     setExcluindo(true);

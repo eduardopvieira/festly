@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,14 +12,6 @@ export default function NovoServico() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!user) { navigate('/login'); return; }
-    if (user.tipoUsuario !== 'PRESTADOR') {
-      toast.error('Acesso restrito a prestadores.');
-      navigate('/');
-    }
-  }, [user, navigate]);
 
   async function onSubmit(values) {
     setIsSubmitting(true);

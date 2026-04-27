@@ -8,6 +8,14 @@ export function listarServicos(filtros = {}) {
   return api.get('/catalogo', { params });
 }
 
+export function listarServicosPublicos(filtros = {}) {
+  const params = {};
+  if (filtros.categoria) params.categoria = filtros.categoria;
+  if (filtros.precoMax) params.precoMax = filtros.precoMax;
+  if (filtros.disponivel !== undefined) params.disponivel = filtros.disponivel;
+  return api.get('/public/catalogo', { params });
+}
+
 export function listarMeusServicos(usuarioId) {
   return api.get(`/catalogo/usuario/${usuarioId}`);
 }
