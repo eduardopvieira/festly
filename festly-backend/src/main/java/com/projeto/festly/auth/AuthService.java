@@ -36,7 +36,7 @@ public class AuthService {
             throw new IllegalStateException("Email já cadastrado");
         }
 
-        String codigo = generateCode(); // <--- colocar algum valor fixo para testes
+        String codigo = "111111"; // generateCode(); // <--- colocar algum valor fixo para testes
 
         Usuario usuario = Usuario.builder()
                 .nome(request.getNome())
@@ -51,7 +51,7 @@ public class AuthService {
                 .build();
 
         usuarioRepository.save(usuario);
-        sendVerificationEmail(usuario.getEmail(), usuario.getNome(), codigo); // <-- comentar quando for testar
+        //sendVerificationEmail(usuario.getEmail(), usuario.getNome(), codigo); // <-- comentar quando for testar
     }
 
     public AuthResponse verify(VerifyRequest request) {

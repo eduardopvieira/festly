@@ -23,12 +23,7 @@ public class Carrinho {
     @JoinColumn(name = "usuario_id", nullable = false, unique = true)
     private Usuario usuario;
 
-    @ManyToMany
-    @JoinTable(
-            name = "carrinho_servicos",
-            joinColumns = @JoinColumn(name = "carrinho_id"),
-            inverseJoinColumns = @JoinColumn(name = "servico_id")
-    )
+    @OneToMany(mappedBy = "carrinho", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<Servico> servicos = new ArrayList<>();
+    private List<ItemCarrinho> itens = new ArrayList<>();
 }

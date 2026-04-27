@@ -1,7 +1,9 @@
 package com.projeto.festly.controller;
 
 import com.projeto.festly.dto.CarrinhoResponse;
+import com.projeto.festly.dto.ItemCarrinhoRequest;
 import com.projeto.festly.service.CarrinhoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +22,9 @@ public class CarrinhoController {
 
     @PostMapping("/{usuarioId}/servicos/{servicoId}")
     public CarrinhoResponse adicionarServico(@PathVariable Long usuarioId,
-                                             @PathVariable Long servicoId) {
-        return service.adicionarServico(usuarioId, servicoId);
+                                             @PathVariable Long servicoId,
+                                             @Valid @RequestBody ItemCarrinhoRequest request) { // NOVO
+        return service.adicionarServico(usuarioId, servicoId, request.getDataEvento());
     }
 
     @DeleteMapping("/{usuarioId}/servicos/{servicoId}")
@@ -34,5 +37,11 @@ public class CarrinhoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void limpar(@PathVariable Long usuarioId) {
         service.limpar(usuarioId);
+    }
+
+    @PostMapping("/{usuarioId}/checkout")
+    @ResponseStatus(HttpStatus.OK)
+    public void finalizarCompra(@PathVariable Long usuarioId) {
+        service.finalizarCompra(usuarioId);
     }
 }
