@@ -18,9 +18,11 @@ public class PublicCatalogoController {
 
     @GetMapping
     public List<ServicoResponse> listar(
+            @RequestParam(required = false) String nome,
             @RequestParam(required = false) CategoriaServico categoria,
-            @RequestParam(required = false) BigDecimal precoMax,
-            @RequestParam(required = false) Boolean disponivel) {
-        return service.listar(categoria, precoMax, disponivel);
+            @RequestParam(required = false) String cidade,
+            @RequestParam(required = false) BigDecimal precoMax) {
+
+        return service.listar(nome, categoria, cidade, precoMax);
     }
 }
