@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { buscarServico, atualizarServico, uploadFoto, deletarFoto } from '../services/servicoService';
 import { toast } from 'sonner';
 import ServicoForm from '../components/ServicoForm';
+import DisponibilidadeSemanalEditor from '../components/DisponibilidadeSemanalEditor';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
@@ -113,7 +114,9 @@ export default function EditarServico() {
         </CardContent>
       </Card>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
+        <DisponibilidadeSemanalEditor servicoId={id} />
+
         <Card className="py-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">

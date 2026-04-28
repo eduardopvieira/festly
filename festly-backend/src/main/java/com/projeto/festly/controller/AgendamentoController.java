@@ -20,16 +20,14 @@ public class AgendamentoController {
     private final AgendamentoService service;
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENTE')") // Apenas clientes podem contratar serviços
+    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<AgendamentoResponse> agendar(@RequestBody @Valid AgendamentoRequest request) {
         AgendamentoResponse response = service.agendar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-
     @GetMapping("/servico/{servicoId}/ocupados")
     public ResponseEntity<List<String>> listarDatasOcupadas(@PathVariable Long servicoId) {
-        // Útil para o Front-end (React) desabilitar datas no calendário
         return ResponseEntity.ok(service.buscarDatasOcupadas(servicoId));
     }
 }

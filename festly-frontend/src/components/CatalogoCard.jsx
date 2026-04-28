@@ -1,21 +1,20 @@
-import { useState, useEffect } from 'react';
-import { ShoppingCart, Check, Loader2, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '../contexts/AuthContext';
-import { useCart } from '../contexts/CartContext';
-import api from '../services/api'; 
+import { criarAgendamento } from '../services/agendamentoService';
+import { toast } from 'sonner';
+import CalendarioBlocos from './CalendarioBlocos';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -30,38 +29,37 @@ const COBRANCA_SUFFIX = {
 export default function CatalogoCard({ servico }) {
   const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
   const { user } = useAuth();
-  const { isInCart, addItem } = useCart();
-  const inCart = isInCart(servico.id);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [dataSelecionada, setDataSelecionada] = useState('');
-  const [datasOcupadas, setDatasOcupadas] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [blocoSelecionado, setBlocoSelecionado] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [agendando, setAgendando] = useState(false);
 
-  // Busca datas ocupadas ao abrir o modal
-  useEffect(() => {
-    if (isModalOpen) {
-      setLoading(true);
-      api.get(`/agendamentos/servico/${servico.id}/ocupados`)
-        .then(res => setDatasOcupadas(res.data))
-        .catch(() => console.error("Erro ao carregar agenda"))
-        .finally(() => setLoading(false));
-    }
-  }, [isModalOpen, servico.id]);
-
-  const hoje = new Date().toISOString().split('T')[0];
-  const ocupada = datasOcupadas.includes(dataSelecionada);
-  const dataValida = dataSelecionada && !ocupada && dataSelecionada >= hoje;
+  function abrirModal() {
+    setBlocoSelecionado(null);
+    setIsModalOpen(true);
+  }
 
   async function handleConfirm() {
-    if (!dataValida || adding) return;
-    setAdding(true);
+    if (!blocoSelecionado || !user?.id || agendando) return;
+    setAgendando(true);
     try {
-      await addItem(servico.id, dataSelecionada);
+      await criarAgendamento({
+        servicoId: servico.id,
+        clienteId: user.id,
+        dataEvento: blocoSelecionado.data,
+        horarioEvento: blocoSelecionado.hora,
+      });
+      toast.success('Agendamento realizado com sucesso!');
       setIsModalOpen(false);
+      setBlocoSelecionado(null);
+    } catch (err) {
+      const msg = err.response?.data?.message ?? 'Erro ao realizar agendamento.';
+      toast.error(msg);
+      setBlocoSelecionado(null);
+      setRefreshKey((prev) => prev + 1);
     } finally {
-      setAdding(false);
+      setAgendando(false);
     }
   }
 
@@ -69,7 +67,6 @@ export default function CatalogoCard({ servico }) {
     <>
       <Card className="transition-all hover:shadow-md py-0">
         <CardContent className="p-4 flex gap-4">
-          {/* Avatar com Gradiente Simples */}
           <div className="h-14 w-14 shrink-0 rounded-xl flex items-center justify-center bg-primary text-primary-foreground text-2xl font-bold">
             {initial}
           </div>
@@ -90,17 +87,16 @@ export default function CatalogoCard({ servico }) {
 
             <div className="flex items-center justify-between gap-3 mt-4">
               <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
-              
+
               {user?.tipoUsuario === 'CLIENTE' && (
                 <Button
                   size="sm"
-                  variant={inCart ? 'secondary' : 'default'}
+                  variant="default"
                   className="h-7 text-xs gap-1.5"
-                  onClick={() => setIsModalOpen(true)}
-                  disabled={inCart}
+                  onClick={abrirModal}
                 >
-                  {inCart ? <Check className="h-3 w-3" /> : <CalendarIcon className="h-3 w-3" />}
-                  {inCart ? 'No carrinho' : 'Agendar'}
+                  <CalendarIcon className="h-3 w-3" />
+                  Agendar
                 </Button>
               )}
             </div>
@@ -108,42 +104,39 @@ export default function CatalogoCard({ servico }) {
         </CardContent>
       </Card>
 
-      {/* MODAL DE AGENDAMENTO (Centralizado) */}
       <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <AlertDialogContent className="max-w-[400px]">
+        <AlertDialogContent className="max-w-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Escolha uma data</AlertDialogTitle>
+            <AlertDialogTitle>Agendar {servico.nome}</AlertDialogTitle>
             <AlertDialogDescription>
-              Verifique a disponibilidade para <strong>{servico.nome}</strong>.
+              Selecione um horário disponível na agenda do prestador.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data do Evento</label>
-              <Input 
-                type="date" 
-                min={hoje}
-                value={dataSelecionada}
-                onChange={(e) => setDataSelecionada(e.target.value)}
-                className={ocupada ? "border-destructive focus-visible:ring-destructive" : ""}
-              />
-              {loading && <p className="text-xs text-muted-foreground animate-pulse">Consultando agenda...</p>}
-              {ocupada && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> Data já reservada por outro cliente.
-                </p>
-              )}
-            </div>
+          <div className="py-4">
+            <CalendarioBlocos
+              servicoId={servico.id}
+              blocoSelecionado={blocoSelecionado}
+              onSelecionarBloco={setBlocoSelecionado}
+              refreshKey={refreshKey}
+            />
           </div>
+
+          {blocoSelecionado && (
+            <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+              Horário escolhido:{' '}
+              <strong>
+                {new Date(`${blocoSelecionado.data}T00:00:00`).toLocaleDateString('pt-BR')} ·{' '}
+                {blocoSelecionado.hora.slice(0, 5)}
+              </strong>{' '}
+              ({blocoSelecionado.duracaoMinutos} min)
+            </div>
+          )}
 
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <Button 
-              onClick={handleConfirm} 
-              disabled={!dataValida || adding || loading}
-            >
-              {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            <Button onClick={handleConfirm} disabled={!blocoSelecionado || agendando}>
+              {agendando ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Confirmar Agendamento
             </Button>
           </AlertDialogFooter>

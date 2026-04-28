@@ -1,10 +1,19 @@
 import api from './api';
 
-export async function buscarDatasOcupadas(servicoId) {
-  // retorna um array de strings no formato YYYY-MM-DD
-  return api.get(`/agendamentos/servico/${servicoId}/ocupados`);
+export function listarBlocos(servicoId, { inicio, fim } = {}) {
+  return api.get(`/disponibilidades/servico/${servicoId}/blocos`, {
+    params: { inicio, fim },
+  });
 }
 
-export async function criarAgendamento(payload) {
+export function listarRegrasSemanais(servicoId) {
+  return api.get(`/disponibilidades/servico/${servicoId}/regras`);
+}
+
+export function definirDisponibilidadeSemanal(servicoId, regras) {
+  return api.put(`/disponibilidades/servico/${servicoId}`, { regras });
+}
+
+export function criarAgendamento(payload) {
   return api.post('/agendamentos', payload);
 }

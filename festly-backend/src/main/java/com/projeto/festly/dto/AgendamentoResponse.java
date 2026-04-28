@@ -5,6 +5,7 @@ import com.projeto.festly.entity.StatusAgendamento;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 public class AgendamentoResponse {
@@ -15,6 +16,7 @@ public class AgendamentoResponse {
     private Long clienteId;
     private String nomeCliente;
     private LocalDate dataEvento;
+    private LocalTime horarioEvento;
     private StatusAgendamento status;
 
     public static AgendamentoResponse from(Agendamento agendamento) {
@@ -25,6 +27,7 @@ public class AgendamentoResponse {
         response.setClienteId(agendamento.getCliente().getId());
         response.setNomeCliente(agendamento.getCliente().getNome());
         response.setDataEvento(agendamento.getDataEvento());
+        response.setHorarioEvento(agendamento.getHorarioEvento());
         response.setStatus(agendamento.getStatus());
         return response;
     }

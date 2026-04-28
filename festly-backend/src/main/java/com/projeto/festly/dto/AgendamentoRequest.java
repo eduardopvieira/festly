@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 public class AgendamentoRequest {
@@ -18,4 +19,7 @@ public class AgendamentoRequest {
     @NotNull(message = "A data do evento é obrigatória")
     @FutureOrPresent(message = "A data do agendamento não pode estar no passado")
     private LocalDate dataEvento;
+
+    @NotNull(message = "O horário do evento é obrigatório")
+    private LocalTime horarioEvento;
 }

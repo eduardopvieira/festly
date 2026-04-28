@@ -11,11 +11,13 @@ import com.projeto.festly.repository.ServicoRepository;
 import com.projeto.festly.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,49 +26,65 @@ public class AgendamentoService {
     private final AgendamentoRepository repository;
     private final ServicoRepository servicoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final DisponibilidadeService disponibilidadeService;
 
+    @Transactional
     public AgendamentoResponse agendar(AgendamentoRequest request) {
-        // 1. Verifica se a data já está ocupada
-        boolean dataOcupada = repository.existsByServicoIdAndDataEventoAndStatusNot(
-                request.getServicoId(),
-                request.getDataEvento(),
-                StatusAgendamento.CANCELADO // Ignora os cancelados, pois a data volta a ficar livre
-        );
+        Servico servico = servicoRepository.findById(request.getServicoId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Serviço não encontrado: " + request.getServicoId()));
 
-        if (dataOcupada) {
-            throw new IllegalStateException("O serviço já está reservado para esta data.");
+        Usuario cliente = usuarioRepository.findById(request.getClienteId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Cliente não encontrado: " + request.getClienteId()));
+
+        LocalDateTime momento = LocalDateTime.of(request.getDataEvento(), request.getHorarioEvento());
+        if (momento.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("O horário escolhido já passou.");
         }
 
-        // 2. Busca o serviço e o cliente (lança exceção se não achar)
-        // Busca o serviço e lança erro se não existir
-        Servico servico = servicoRepository.findById(request.getServicoId())
-                .orElseThrow(() -> new EntityNotFoundException("Serviço com ID " + request.getServicoId() + " não encontrado."));
+        boolean dentroDaAgenda = disponibilidadeService.horarioPermitido(
+                request.getServicoId(),
+                request.getDataEvento(),
+                request.getHorarioEvento()
+        );
+        if (!dentroDaAgenda) {
+            throw new IllegalStateException("Este horário está fora da agenda do prestador.");
+        }
 
-        // Busca o cliente e lança erro se não existir
-        Usuario cliente = usuarioRepository.findById(request.getClienteId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário cliente com ID " + request.getClienteId() + " não encontrado."));
+        boolean jaReservado = repository.existsByServicoIdAndDataEventoAndHorarioEventoAndStatusNot(
+                request.getServicoId(),
+                request.getDataEvento(),
+                request.getHorarioEvento(),
+                StatusAgendamento.CANCELADO
+        );
+        if (jaReservado) {
+            throw new IllegalStateException("Este horário já foi reservado.");
+        }
 
-        // 3. Cria e salva o agendamento
         Agendamento agendamento = Agendamento.builder()
                 .servico(servico)
                 .cliente(cliente)
                 .dataEvento(request.getDataEvento())
-                .status(StatusAgendamento.PENDENTE) // Começa como pendente até aprovação/pagamento
+                .horarioEvento(request.getHorarioEvento())
+                .status(StatusAgendamento.PENDENTE)
                 .build();
 
-        return AgendamentoResponse.from(repository.save(agendamento));
+        try {
+            return AgendamentoResponse.from(repository.saveAndFlush(agendamento));
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalStateException("Este horário acabou de ser reservado por outro cliente.");
+        }
     }
 
+    @Transactional(readOnly = true)
     public List<String> buscarDatasOcupadas(Long servicoId) {
-        // Verifica primeiro se o serviço existe, mantendo o padrão do seu ServicoService
         if (!servicoRepository.existsById(servicoId)) {
             throw new EntityNotFoundException("Serviço não encontrado: " + servicoId);
         }
-
-        // Busca as datas e converte para String (formato ISO)
         return repository.findDatasOcupadasByServicoId(servicoId)
                 .stream()
-                .map(date -> date.toString())
-                .collect(Collectors.toList());
+                .map(LocalDate::toString)
+                .toList();
     }
 }
