@@ -24,11 +24,21 @@ function adicionarDias(data, dias) {
   return d;
 }
 
+function chaveBloco(bloco) {
+  return `${bloco.data}|${bloco.hora}`;
+}
+
 function rotuloHora(hora) {
   return hora?.slice(0, 5);
 }
 
-export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSelecionarBloco, refreshKey = 0 }) {
+export default function CalendarioBlocos({
+  servicoId,
+  selecionados = [],
+  onToggleBloco,
+  onRemoverMeu,
+  refreshKey = 0,
+}) {
   const hoje = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -56,8 +66,7 @@ export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSeleci
   const dias = useMemo(() => {
     const lista = [];
     for (let i = 0; i < 7; i += 1) {
-      const data = adicionarDias(referenciaSemana, i);
-      lista.push(data);
+      lista.push(adicionarDias(referenciaSemana, i));
     }
     return lista;
   }, [referenciaSemana]);
@@ -72,6 +81,11 @@ export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSeleci
     return map;
   }, [blocos]);
 
+  const selecionadosSet = useMemo(
+    () => new Set(selecionados.map(chaveBloco)),
+    [selecionados]
+  );
+
   function semanaAnterior() {
     const nova = adicionarDias(referenciaSemana, -7);
     if (adicionarDias(nova, 6) < hoje) return;
@@ -84,8 +98,17 @@ export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSeleci
     setReferenciaSemana(nova);
   }
 
-  const podeVoltar = adicionarDias(referenciaSemana, -7).getTime() + 6 * 86400000 >= hoje.getTime();
+  const podeVoltar =
+    adicionarDias(referenciaSemana, -7).getTime() + 6 * 86400000 >= hoje.getTime();
   const podeAvancar = adicionarDias(referenciaSemana, 7).getTime() <= limite.getTime();
+
+  function handleClick(bloco) {
+    if (bloco.status === 'DISPONIVEL') {
+      onToggleBloco?.(bloco);
+    } else if (bloco.status === 'MEU') {
+      onRemoverMeu?.(bloco);
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -102,15 +125,18 @@ export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSeleci
         </Button>
       </div>
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Disponível
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-400" /> Reservado
+          <span className="h-2.5 w-2.5 rounded-full bg-primary" /> Selecionado
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-200 border" /> Fora da agenda
+          <span className="h-2.5 w-2.5 rounded-full bg-violet-500" /> No seu carrinho
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-zinc-400" /> Indisponível
         </span>
       </div>
 
@@ -122,30 +148,37 @@ export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSeleci
           const passada = dia < hoje;
           return (
             <div key={iso} className="flex flex-col">
-              <div className={`text-center text-xs ${ehHoje ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+              <div
+                className={`text-center text-xs ${
+                  ehHoje ? 'text-primary font-semibold' : 'text-muted-foreground'
+                }`}
+              >
                 {DIAS_SEMANA[dia.getDay()]}
                 <div className="text-sm text-foreground">{dia.getDate()}</div>
               </div>
-              <div className="mt-2 flex flex-col gap-1">
+              <div className="mt-2 flex flex-col gap-1.5">
                 {passada && blocosDoDia.length === 0 && (
-                  <div className="rounded-md border border-dashed py-2 text-center text-[11px] text-muted-foreground/70">
+                  <div className="h-8 flex items-center justify-center rounded-md border border-dashed text-[11px] text-muted-foreground/70">
                     —
                   </div>
                 )}
                 {!passada && blocosDoDia.length === 0 && (
-                  <div className="rounded-md border border-dashed py-2 text-center text-[11px] text-muted-foreground/70">
-                    Fora da agenda
+                  <div className="h-8 flex items-center justify-center rounded-md border border-dashed px-1 text-[10px] leading-tight text-muted-foreground/70">
+                    Fora
                   </div>
                 )}
                 {blocosDoDia.map((bloco) => {
-                  const selecionado =
-                    blocoSelecionado?.data === bloco.data && blocoSelecionado?.hora === bloco.hora;
-                  const base = 'rounded-md text-xs px-2 py-1 text-center border transition-colors';
+                  const selecionado = selecionadosSet.has(chaveBloco(bloco));
+                  const base =
+                    'h-8 inline-flex items-center justify-center rounded-md text-xs leading-none border transition-colors font-medium';
                   let classe = base;
                   if (bloco.status === 'DISPONIVEL') {
                     classe += selecionado
-                      ? ' bg-primary text-primary-foreground border-primary'
+                      ? ' bg-primary text-primary-foreground border-primary cursor-pointer'
                       : ' bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-900 cursor-pointer';
+                  } else if (bloco.status === 'MEU') {
+                    classe +=
+                      ' bg-violet-50 hover:bg-violet-100 border-violet-300 text-violet-900 cursor-pointer';
                   } else if (bloco.status === 'RESERVADO') {
                     classe += ' bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed';
                   } else {
@@ -156,8 +189,17 @@ export default function CalendarioBlocos({ servicoId, blocoSelecionado, onSeleci
                       type="button"
                       key={`${bloco.data}-${bloco.hora}`}
                       className={classe}
-                      onClick={() => bloco.status === 'DISPONIVEL' && onSelecionarBloco(bloco)}
-                      disabled={bloco.status !== 'DISPONIVEL'}
+                      onClick={() => handleClick(bloco)}
+                      disabled={bloco.status === 'RESERVADO' || bloco.status === 'INDISPONIVEL'}
+                      title={
+                        bloco.status === 'MEU'
+                          ? 'Clique para remover do carrinho'
+                          : bloco.status === 'DISPONIVEL'
+                          ? selecionado
+                            ? 'Clique para desmarcar'
+                            : 'Clique para selecionar'
+                          : 'Indisponível'
+                      }
                     >
                       {rotuloHora(bloco.hora)}
                     </button>

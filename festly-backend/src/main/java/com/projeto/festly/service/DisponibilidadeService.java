@@ -7,10 +7,12 @@ import com.projeto.festly.dto.DisponibilidadeSemanalRequest;
 import com.projeto.festly.dto.DisponibilidadeSemanalResponse;
 import com.projeto.festly.entity.Agendamento;
 import com.projeto.festly.entity.DisponibilidadeSemanal;
+import com.projeto.festly.entity.ItemCarrinho;
 import com.projeto.festly.entity.Servico;
 import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.repository.AgendamentoRepository;
 import com.projeto.festly.repository.DisponibilidadeSemanalRepository;
+import com.projeto.festly.repository.ItemCarrinhoRepository;
 import com.projeto.festly.repository.ServicoRepository;
 import com.projeto.festly.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,6 +40,7 @@ public class DisponibilidadeService {
 
     private final DisponibilidadeSemanalRepository disponibilidadeRepository;
     private final AgendamentoRepository agendamentoRepository;
+    private final ItemCarrinhoRepository itemCarrinhoRepository;
     private final ServicoRepository servicoRepository;
     private final UsuarioRepository usuarioRepository;
 
@@ -78,7 +81,7 @@ public class DisponibilidadeService {
     }
 
     @Transactional(readOnly = true)
-    public List<BlocoHorarioResponse> gerarBlocos(Long servicoId, LocalDate inicio, LocalDate fim) {
+    public List<BlocoHorarioResponse> gerarBlocos(Long servicoId, LocalDate inicio, LocalDate fim, String emailUsuario) {
         if (!servicoRepository.existsById(servicoId)) {
             throw new EntityNotFoundException("Serviço não encontrado: " + servicoId);
         }
@@ -100,13 +103,30 @@ public class DisponibilidadeService {
         Map<DayOfWeek, List<DisponibilidadeSemanal>> regrasPorDia = regras.stream()
                 .collect(Collectors.groupingBy(DisponibilidadeSemanal::getDiaSemana));
 
-        Set<Map.Entry<LocalDate, LocalTime>> reservados = agendamentoRepository
+        Set<Map.Entry<LocalDate, LocalTime>> reservadosConfirmados = agendamentoRepository
                 .findAtivosNoIntervalo(servicoId, inicioReal, fimReal)
                 .stream()
                 .filter(a -> a.getHorarioEvento() != null)
                 .map(a -> (Map.Entry<LocalDate, LocalTime>) new AbstractMap.SimpleEntry<>(
                         a.getDataEvento(), a.getHorarioEvento()))
                 .collect(Collectors.toCollection(HashSet::new));
+
+        Long usuarioId = null;
+        if (emailUsuario != null) {
+            usuarioId = usuarioRepository.findByEmail(emailUsuario).map(Usuario::getId).orElse(null);
+        }
+        Set<Map.Entry<LocalDate, LocalTime>> meusItensCarrinho = new HashSet<>();
+        Set<Map.Entry<LocalDate, LocalTime>> itensCarrinhoOutros = new HashSet<>();
+        for (ItemCarrinho item : itemCarrinhoRepository.findReservasNoIntervalo(servicoId, inicioReal, fimReal)) {
+            Map.Entry<LocalDate, LocalTime> chave = new AbstractMap.SimpleEntry<>(
+                    item.getDataEvento(), item.getHorarioEvento());
+            Long donoId = item.getCarrinho().getUsuario().getId();
+            if (usuarioId != null && donoId.equals(usuarioId)) {
+                meusItensCarrinho.add(chave);
+            } else {
+                itensCarrinhoOutros.add(chave);
+            }
+        }
 
         LocalDateTime agora = LocalDateTime.now();
         List<BlocoHorarioResponse> blocos = new ArrayList<>();
@@ -119,10 +139,13 @@ public class DisponibilidadeService {
                 LocalTime hora = regra.getHoraInicio();
                 while (!hora.plusMinutes(regra.getDuracaoMinutos()).isAfter(regra.getHoraFim())) {
                     LocalDateTime momento = LocalDateTime.of(data, hora);
+                    Map.Entry<LocalDate, LocalTime> chave = new AbstractMap.SimpleEntry<>(data, hora);
                     BlocoStatus status;
                     if (momento.isBefore(agora)) {
                         status = BlocoStatus.INDISPONIVEL;
-                    } else if (reservados.contains(new AbstractMap.SimpleEntry<>(data, hora))) {
+                    } else if (meusItensCarrinho.contains(chave)) {
+                        status = BlocoStatus.MEU;
+                    } else if (reservadosConfirmados.contains(chave) || itensCarrinhoOutros.contains(chave)) {
                         status = BlocoStatus.RESERVADO;
                     } else {
                         status = BlocoStatus.DISPONIVEL;

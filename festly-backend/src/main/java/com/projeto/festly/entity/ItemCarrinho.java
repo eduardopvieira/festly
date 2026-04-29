@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "itens_carrinho")
@@ -28,4 +29,7 @@ public class ItemCarrinho {
 
     @Column(name = "data_evento", nullable = false)
     private LocalDate dataEvento;
+
+    @Column(name = "horario_evento")
+    private LocalTime horarioEvento;
 }

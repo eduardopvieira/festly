@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { 
-  getCarrinho, 
-  adicionarServico, 
-  removerServico, 
-  limparCarrinho, 
-  finalizarCompra 
+import {
+  getCarrinho,
+  adicionarServico,
+  removerServico,
+  removerSlot,
+  limparCarrinho,
+  finalizarCompra,
 } from '../services/carrinhoService';
 
 const CartContext = createContext(null);
@@ -16,7 +17,6 @@ export function CartProvider({ children }) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // 1. Função base: busca dados do backend
   const fetchCart = useCallback(async () => {
     if (!user) return;
     try {
@@ -32,7 +32,6 @@ export function CartProvider({ children }) {
     }
   }, [user?.id]);
 
-  // 2. Efeito de inicialização
   useEffect(() => {
     if (user) {
       fetchCart();
@@ -42,18 +41,31 @@ export function CartProvider({ children }) {
     }
   }, [user?.id, fetchCart]);
 
-  // 3. Funções de manipulação (todas agora enxergam o fetchCart)
-  const addItem = useCallback(async (servicoId, dataEvento) => {
+  const addItem = useCallback(async (servicoId, dataEvento, horarioEvento = null) => {
     if (!user) return;
-    if (!dataEvento) throw new Error("A data do evento é obrigatória.");
-    
-    await adicionarServico(user.id, servicoId, dataEvento);
+    if (!dataEvento) throw new Error('A data do evento é obrigatória.');
+    await adicionarServico(user.id, servicoId, dataEvento, horarioEvento);
+    await fetchCart();
+  }, [user?.id, fetchCart]);
+
+  const addItems = useCallback(async (servicoId, slots) => {
+    if (!user) return;
+    if (!slots?.length) return;
+    for (const { dataEvento, horarioEvento } of slots) {
+      await adicionarServico(user.id, servicoId, dataEvento, horarioEvento ?? null);
+    }
     await fetchCart();
   }, [user?.id, fetchCart]);
 
   const removeItem = useCallback(async (servicoId) => {
     if (!user) return;
     await removerServico(user.id, servicoId);
+    await fetchCart();
+  }, [user?.id, fetchCart]);
+
+  const removeSlot = useCallback(async (servicoId, dataEvento, horarioEvento) => {
+    if (!user) return;
+    await removerSlot(user.id, servicoId, dataEvento, horarioEvento);
     await fetchCart();
   }, [user?.id, fetchCart]);
 
@@ -77,17 +89,19 @@ export function CartProvider({ children }) {
 
   return (
     <CartContext.Provider
-      value={{ 
-        items, 
-        total, 
-        itemCount: items.length, 
-        loading, 
-        addItem, 
-        removeItem, 
-        clearCart, 
-        isInCart, 
-        fetchCart, 
-        checkout 
+      value={{
+        items,
+        total,
+        itemCount: items.length,
+        loading,
+        addItem,
+        addItems,
+        removeItem,
+        removeSlot,
+        clearCart,
+        isInCart,
+        fetchCart,
+        checkout,
       }}
     >
       {children}

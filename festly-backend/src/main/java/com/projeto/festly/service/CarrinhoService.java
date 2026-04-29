@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -28,35 +30,42 @@ public class CarrinhoService {
         return CarrinhoResponse.from(carrinho);
     }
 
-    // Em CarrinhoService.java, altera o método adicionarServico:
     @Transactional
-    public CarrinhoResponse adicionarServico(Long usuarioId, Long servicoId, LocalDate dataEvento) {
+    public CarrinhoResponse adicionarServico(Long usuarioId, Long servicoId, LocalDate dataEvento, LocalTime horarioEvento) {
         Carrinho carrinho = buscarOuCriar(usuarioId);
         Servico servico = servicoRepository.findById(servicoId)
                 .orElseThrow(() -> new EntityNotFoundException("Serviço não encontrado: " + servicoId));
 
-        // Verifica se já tem este serviço na MESMA data
+        if (horarioEvento != null) {
+            boolean reservadoPorOutro = agendamentoRepository
+                    .existsByServicoIdAndDataEventoAndHorarioEventoAndStatusNot(
+                            servicoId, dataEvento, horarioEvento, StatusAgendamento.CANCELADO);
+            if (reservadoPorOutro) {
+                throw new IllegalStateException("Este horário já foi reservado.");
+            }
+        }
+
         boolean jaExiste = carrinho.getItens().stream()
-                .anyMatch(item -> item.getServico().getId().equals(servicoId) &&
-                        item.getDataEvento().equals(dataEvento));
+                .anyMatch(item -> item.getServico().getId().equals(servicoId)
+                        && item.getDataEvento().equals(dataEvento)
+                        && Objects.equals(item.getHorarioEvento(), horarioEvento));
         if (jaExiste) {
-            throw new IllegalStateException("Este serviço já está no carrinho para esta data");
+            throw new IllegalStateException("Este horário já está no seu carrinho.");
         }
 
         ItemCarrinho novoItem = ItemCarrinho.builder()
                 .carrinho(carrinho)
                 .servico(servico)
                 .dataEvento(dataEvento)
+                .horarioEvento(horarioEvento)
                 .build();
 
         carrinho.getItens().add(novoItem);
         carrinhoRepository.save(carrinho);
 
-        // NOTA: Se usas um campo valorTotal, lembra-te de o recalcular aqui!
         return CarrinhoResponse.from(carrinho);
     }
 
-    // Altera também o removerServico para apagar através dos getItens():
     @Transactional
     public CarrinhoResponse removerServico(Long usuarioId, Long servicoId) {
         Carrinho carrinho = buscarOuCriar(usuarioId);
@@ -68,14 +77,26 @@ public class CarrinhoService {
         return CarrinhoResponse.from(carrinho);
     }
 
-    // Altera o limpar:
+    @Transactional
+    public CarrinhoResponse removerSlot(Long usuarioId, Long servicoId, LocalDate dataEvento, LocalTime horarioEvento) {
+        Carrinho carrinho = buscarOuCriar(usuarioId);
+        boolean removido = carrinho.getItens().removeIf(item ->
+                item.getServico().getId().equals(servicoId)
+                        && item.getDataEvento().equals(dataEvento)
+                        && Objects.equals(item.getHorarioEvento(), horarioEvento));
+        if (!removido) {
+            throw new EntityNotFoundException("Slot não encontrado no carrinho.");
+        }
+        carrinhoRepository.save(carrinho);
+        return CarrinhoResponse.from(carrinho);
+    }
+
     @Transactional
     public void limpar(Long usuarioId) {
         Carrinho carrinho = buscarOuCriar(usuarioId);
         carrinho.getItens().clear();
         carrinhoRepository.save(carrinho);
     }
-
 
     private Carrinho buscarOuCriar(Long usuarioId) {
         return carrinhoRepository.findByUsuarioId(usuarioId)
@@ -97,36 +118,46 @@ public class CarrinhoService {
             throw new IllegalStateException("Seu carrinho está vazio.");
         }
 
-        // 1. Verificação em tempo real: As datas ainda estão livres?
         for (ItemCarrinho item : carrinho.getItens()) {
-            boolean dataOcupada = agendamentoRepository.existsByServicoIdAndDataEventoAndStatusNot(
-                    item.getServico().getId(),
-                    item.getDataEvento(),
-                    StatusAgendamento.CANCELADO
-            );
+            boolean conflito;
+            if (item.getHorarioEvento() != null) {
+                conflito = agendamentoRepository.existsByServicoIdAndDataEventoAndHorarioEventoAndStatusNot(
+                        item.getServico().getId(),
+                        item.getDataEvento(),
+                        item.getHorarioEvento(),
+                        StatusAgendamento.CANCELADO
+                );
+            } else {
+                conflito = agendamentoRepository.existsByServicoIdAndDataEventoAndStatusNot(
+                        item.getServico().getId(),
+                        item.getDataEvento(),
+                        StatusAgendamento.CANCELADO
+                );
+            }
 
-            if (dataOcupada) {
+            if (conflito) {
                 throw new IllegalStateException(
-                        "Poxa! O serviço '" + item.getServico().getNome() +
-                                "' acabou de ser reservado por outra pessoa para o dia " +
-                                item.getDataEvento() + ". Remova-o do carrinho para continuar."
+                        "O serviço '" + item.getServico().getNome() +
+                                "' acabou de ser reservado por outra pessoa para " +
+                                item.getDataEvento() +
+                                (item.getHorarioEvento() != null ? " às " + item.getHorarioEvento() : "") +
+                                ". Remova-o do carrinho para continuar."
                 );
             }
         }
 
-        // 2. Transforma os itens do carrinho em Agendamentos definitivos
         for (ItemCarrinho item : carrinho.getItens()) {
             Agendamento novoAgendamento = Agendamento.builder()
                     .servico(item.getServico())
                     .cliente(carrinho.getUsuario())
                     .dataEvento(item.getDataEvento())
-                    .status(StatusAgendamento.CONFIRMADO) // Simulando que o pagamento deu certo
+                    .horarioEvento(item.getHorarioEvento())
+                    .status(StatusAgendamento.CONFIRMADO)
                     .build();
 
             agendamentoRepository.save(novoAgendamento);
         }
 
-        // 3. Limpa o carrinho após a compra
         carrinho.getItens().clear();
         carrinhoRepository.save(carrinho);
     }

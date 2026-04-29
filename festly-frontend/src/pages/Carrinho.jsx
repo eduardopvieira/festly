@@ -33,6 +33,7 @@ function formatDate(isoString) {
 function CartItem({ item, onRemove }) {
   const servico = item.servico;
   const dataEvento = item.dataEvento;
+  const horarioEvento = item.horarioEvento?.slice(0, 5);
   
   const [from, to] = avatarGradient(servico.nome);
   const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
@@ -53,6 +54,7 @@ function CartItem({ item, onRemove }) {
         <p className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
           <Calendar className="h-3 w-3" />
           Agendado para: {formatDate(dataEvento)}
+          {horarioEvento && <span className="ml-1">· {horarioEvento}</span>}
         </p>
 
         <p className="text-xs text-muted-foreground mt-0.5">
