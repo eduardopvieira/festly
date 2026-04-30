@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Trash2, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Trash2, Search, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -13,12 +15,8 @@ const CATEGORIA_LABEL = {
 };
 
 const AVATAR_GRADIENTS = [
-  ['#7c3aed', '#a78bfa'],
-  ['#0284c7', '#38bdf8'],
-  ['#d97706', '#fb923c'],
-  ['#059669', '#34d399'],
-  ['#e11d48', '#fb7185'],
-  ['#4338ca', '#818cf8'],
+  ['#7c3aed', '#a78bfa'], ['#0284c7', '#38bdf8'], ['#d97706', '#fb923c'],
+  ['#059669', '#34d399'], ['#e11d48', '#fb7185'], ['#4338ca', '#818cf8'],
 ];
 
 function avatarGradient(nome) {
@@ -26,7 +24,17 @@ function avatarGradient(nome) {
   return AVATAR_GRADIENTS[code];
 }
 
-function CartItem({ servico, onRemove }) {
+function formatDate(isoString) {
+  if (!isoString) return '';
+  const [year, month, day] = isoString.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+function CartItem({ item, onRemove }) {
+  const servico = item.servico;
+  const dataEvento = item.dataEvento;
+  const horarioEvento = item.horarioEvento?.slice(0, 5);
+  
   const [from, to] = avatarGradient(servico.nome);
   const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
   const price = `R$ ${Number(servico.preco).toFixed(2).replace('.', ',')}`;
@@ -42,7 +50,14 @@ function CartItem({ servico, onRemove }) {
 
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm leading-tight">{servico.nome}</p>
-        <p className="text-xs text-primary mt-0.5">
+        
+        <p className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
+          <Calendar className="h-3 w-3" />
+          Agendado para: {formatDate(dataEvento)}
+          {horarioEvento && <span className="ml-1">· {horarioEvento}</span>}
+        </p>
+
+        <p className="text-xs text-muted-foreground mt-0.5">
           {CATEGORIA_LABEL[servico.categoria] ?? servico.categoria}
           {servico.cidade && <> · {servico.cidade}</>}
         </p>
@@ -66,7 +81,9 @@ function CartItem({ servico, onRemove }) {
 }
 
 export default function Carrinho() {
-  const { items, total, loading, removeItem, clearCart } = useCart();
+  const { items, total, loading, removeItem, clearCart, checkout } = useCart();
+  const navigate = useNavigate();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   async function handleRemove(servicoId) {
     try {
@@ -82,6 +99,20 @@ export default function Carrinho() {
       toast.success('Carrinho limpo.');
     } catch {
       toast.error('Erro ao limpar o carrinho.');
+    }
+  }
+
+  async function handleCheckout() {
+    setIsCheckingOut(true);
+    try {
+      await checkout();
+      toast.success('Compra finalizada! Seus serviços foram agendados com sucesso.');
+      navigate('/dashboard/servicos'); 
+    } catch (err) {
+      const mensagem = err.response?.data?.erro || 'Erro ao processar o pagamento.';
+      toast.error(mensagem, { duration: 6000 });
+    } finally {
+      setIsCheckingOut(false);
     }
   }
 
@@ -118,7 +149,7 @@ export default function Carrinho() {
           <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-20" />
           <p className="font-medium">Seu carrinho está vazio.</p>
           <p className="text-sm mt-1 mb-6">Explore o catálogo e adicione serviços.</p>
-          <Link to="/dashboard/servicos">
+          <Link to="/services">
             <Button size="sm" className="gap-2">
               <Search className="h-4 w-4" />
               Explorar serviços
@@ -130,8 +161,8 @@ export default function Carrinho() {
       {!loading && items.length > 0 && (
         <Card>
           <CardContent className="p-4 divide-y divide-border">
-            {items.map((servico) => (
-              <CartItem key={servico.id} servico={servico} onRemove={handleRemove} />
+            {items.map((item) => (
+              <CartItem key={item.id} item={item} onRemove={handleRemove} />
             ))}
           </CardContent>
 
@@ -148,8 +179,14 @@ export default function Carrinho() {
               </div>
             </div>
 
-            <Button className="w-full" onClick={handleSolicitar}>
-              Solicitar orçamentos
+            <Button 
+              className="w-full" 
+              size="lg" 
+              onClick={handleCheckout} 
+              disabled={isCheckingOut}
+            >
+              {isCheckingOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Pagar e Agendar
             </Button>
           </div>
         </Card>
