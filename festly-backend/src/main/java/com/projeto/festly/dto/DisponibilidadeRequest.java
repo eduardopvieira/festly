@@ -7,9 +7,9 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class DisponibilidadeSemanalRequest {
+public class DisponibilidadeRequest {
 
     @NotNull(message = "A lista de regras é obrigatória")
     @Valid
-    private List<DisponibilidadeSemanalItem> regras;
+    private List<RegraDisponibilidadePayload> regras;
 }

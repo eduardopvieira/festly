@@ -9,8 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/carrinho")
@@ -25,26 +24,30 @@ public class CarrinhoController {
     }
 
     @PostMapping("/{usuarioId}/servicos/{servicoId}")
-    public CarrinhoResponse adicionarServico(@PathVariable Long usuarioId,
-                                             @PathVariable Long servicoId,
-                                             @Valid @RequestBody ItemCarrinhoRequest request) {
-        return service.adicionarServico(usuarioId, servicoId, request.getDataEvento(), request.getHorarioEvento());
+    public CarrinhoResponse adicionarServico(
+            @PathVariable Long usuarioId,
+            @PathVariable Long servicoId,
+            @Valid @RequestBody ItemCarrinhoRequest request
+    ) {
+        return service.adicionarServico(usuarioId, servicoId, request.getInicio(), request.getFim());
     }
 
-    @DeleteMapping("/{usuarioId}/servicos/{servicoId}")
-    public CarrinhoResponse removerServico(@PathVariable Long usuarioId,
-                                           @PathVariable Long servicoId) {
-        return service.removerServico(usuarioId, servicoId);
+    @DeleteMapping("/{usuarioId}/itens/{itemId}")
+    public CarrinhoResponse removerItem(
+            @PathVariable Long usuarioId,
+            @PathVariable Long itemId
+    ) {
+        return service.removerItem(usuarioId, itemId);
     }
 
     @DeleteMapping("/{usuarioId}/servicos/{servicoId}/slot")
     public CarrinhoResponse removerSlot(
             @PathVariable Long usuarioId,
             @PathVariable Long servicoId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataEvento,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime horarioEvento
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim
     ) {
-        return service.removerSlot(usuarioId, servicoId, dataEvento, horarioEvento);
+        return service.removerSlot(usuarioId, servicoId, inicio, fim);
     }
 
     @DeleteMapping("/{usuarioId}")

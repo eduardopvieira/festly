@@ -6,8 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "agendamentos")
@@ -21,19 +20,19 @@ public class Agendamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "servico_id", nullable = false)
     private Servico servico;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Usuario cliente;
 
-    @Column(name = "data_evento", nullable = false)
-    private LocalDate dataEvento;
+    @Column(nullable = false)
+    private LocalDateTime inicio;
 
-    @Column(name = "horario_evento")
-    private LocalTime horarioEvento;
+    @Column(nullable = false)
+    private LocalDateTime fim;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

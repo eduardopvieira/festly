@@ -4,17 +4,18 @@ export function getCarrinho(usuarioId) {
   return api.get(`/carrinho/${usuarioId}`);
 }
 
-export function adicionarServico(usuarioId, servicoId, dataEvento, horarioEvento) {
-  return api.post(`/carrinho/${usuarioId}/servicos/${servicoId}`, { dataEvento, horarioEvento });
+/** Adiciona um intervalo (inicio/fim em ISO local datetime) ao carrinho. */
+export function adicionarServico(usuarioId, servicoId, inicio, fim) {
+  return api.post(`/carrinho/${usuarioId}/servicos/${servicoId}`, { inicio, fim });
 }
 
-export function removerServico(usuarioId, servicoId) {
-  return api.delete(`/carrinho/${usuarioId}/servicos/${servicoId}`);
+export function removerItem(usuarioId, itemId) {
+  return api.delete(`/carrinho/${usuarioId}/itens/${itemId}`);
 }
 
-export function removerSlot(usuarioId, servicoId, dataEvento, horarioEvento) {
+export function removerSlot(usuarioId, servicoId, inicio, fim) {
   return api.delete(`/carrinho/${usuarioId}/servicos/${servicoId}/slot`, {
-    params: { dataEvento, horarioEvento },
+    params: { inicio, fim },
   });
 }
 

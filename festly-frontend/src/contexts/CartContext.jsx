@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext';
 import {
   getCarrinho,
   adicionarServico,
-  removerServico,
+  removerItem,
   removerSlot,
   limparCarrinho,
   finalizarCompra,
@@ -41,31 +41,31 @@ export function CartProvider({ children }) {
     }
   }, [user?.id, fetchCart]);
 
-  const addItem = useCallback(async (servicoId, dataEvento, horarioEvento = null) => {
+  const addItem = useCallback(async (servicoId, inicio, fim) => {
     if (!user) return;
-    if (!dataEvento) throw new Error('A data do evento é obrigatória.');
-    await adicionarServico(user.id, servicoId, dataEvento, horarioEvento);
+    if (!inicio || !fim) throw new Error('Início e fim são obrigatórios.');
+    await adicionarServico(user.id, servicoId, inicio, fim);
     await fetchCart();
   }, [user?.id, fetchCart]);
 
   const addItems = useCallback(async (servicoId, slots) => {
     if (!user) return;
     if (!slots?.length) return;
-    for (const { dataEvento, horarioEvento } of slots) {
-      await adicionarServico(user.id, servicoId, dataEvento, horarioEvento ?? null);
+    for (const { inicio, fim } of slots) {
+      await adicionarServico(user.id, servicoId, inicio, fim);
     }
     await fetchCart();
   }, [user?.id, fetchCart]);
 
-  const removeItem = useCallback(async (servicoId) => {
+  const removeItemById = useCallback(async (itemId) => {
     if (!user) return;
-    await removerServico(user.id, servicoId);
+    await removerItem(user.id, itemId);
     await fetchCart();
   }, [user?.id, fetchCart]);
 
-  const removeSlot = useCallback(async (servicoId, dataEvento, horarioEvento) => {
+  const removeSlot = useCallback(async (servicoId, inicio, fim) => {
     if (!user) return;
-    await removerSlot(user.id, servicoId, dataEvento, horarioEvento);
+    await removerSlot(user.id, servicoId, inicio, fim);
     await fetchCart();
   }, [user?.id, fetchCart]);
 
@@ -96,7 +96,7 @@ export function CartProvider({ children }) {
         loading,
         addItem,
         addItems,
-        removeItem,
+        removeItem: removeItemById,
         removeSlot,
         clearCart,
         isInCart,

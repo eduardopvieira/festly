@@ -1,8 +1,16 @@
 import api from './api';
 
-export function listarBlocos(servicoId, { inicio, fim } = {}) {
-  return api.get(`/disponibilidades/servico/${servicoId}/blocos`, {
+/** Intervalos contínuos disponíveis (modelo preferencial). */
+export function listarIntervalos(servicoId, { inicio, fim } = {}) {
+  return api.get(`/disponibilidades/servico/${servicoId}/intervalos`, {
     params: { inicio, fim },
+  });
+}
+
+/** Visão derivada em blocos de duração fixa (granularidade configurável). */
+export function listarBlocos(servicoId, { inicio, fim, duracaoMinutos } = {}) {
+  return api.get(`/disponibilidades/servico/${servicoId}/blocos`, {
+    params: { inicio, fim, duracaoMinutos },
   });
 }
 
@@ -16,4 +24,14 @@ export function definirDisponibilidadeSemanal(servicoId, regras) {
 
 export function criarAgendamento(payload) {
   return api.post('/agendamentos', payload);
+}
+
+export function listarAgendamentosCliente(clienteId) {
+  return api.get(`/agendamentos/cliente/${clienteId}`);
+}
+
+export function cancelarAgendamento(agendamentoId, clienteId) {
+  return api.post(`/agendamentos/${agendamentoId}/cancelar`, null, {
+    params: { clienteId },
+  });
 }

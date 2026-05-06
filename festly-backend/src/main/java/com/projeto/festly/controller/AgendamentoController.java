@@ -26,8 +26,15 @@ public class AgendamentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/servico/{servicoId}/ocupados")
-    public ResponseEntity<List<String>> listarDatasOcupadas(@PathVariable Long servicoId) {
-        return ResponseEntity.ok(service.buscarDatasOcupadas(servicoId));
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<AgendamentoResponse>> listarDoCliente(@PathVariable Long clienteId) {
+        return ResponseEntity.ok(service.listarDoCliente(clienteId));
+    }
+
+    @PostMapping("/{agendamentoId}/cancelar")
+    @PreAuthorize("hasRole('CLIENTE')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelar(@PathVariable Long agendamentoId, @RequestParam Long clienteId) {
+        service.cancelar(agendamentoId, clienteId);
     }
 }

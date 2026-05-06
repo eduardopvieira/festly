@@ -6,37 +6,41 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
-    @Query("SELECT a.dataEvento FROM Agendamento a " +
-            "WHERE a.servico.id = :servicoId " +
-            "AND a.status <> 'CANCELADO'")
-    List<LocalDate> findDatasOcupadasByServicoId(@Param("servicoId") Long servicoId);
-
-    boolean existsByServicoIdAndDataEventoAndStatusNot(
-            Long servicoId,
-            LocalDate dataEvento,
-            StatusAgendamento status
-    );
-
-    boolean existsByServicoIdAndDataEventoAndHorarioEventoAndStatusNot(
-            Long servicoId,
-            LocalDate dataEvento,
-            LocalTime horarioEvento,
-            StatusAgendamento status
-    );
-
-    @Query("SELECT a FROM Agendamento a " +
-            "WHERE a.servico.id = :servicoId " +
-            "AND a.dataEvento BETWEEN :inicio AND :fim " +
-            "AND a.status <> com.projeto.festly.entity.StatusAgendamento.CANCELADO")
-    List<Agendamento> findAtivosNoIntervalo(
+    /**
+     * Agendamentos ativos do serviço cujo intervalo intersecta [inicio, fim).
+     * Critério de overlap: novo.inicio < existente.fim AND novo.fim > existente.inicio
+     */
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE a.servico.id = :servicoId
+              AND a.status <> com.projeto.festly.entity.StatusAgendamento.CANCELADO
+              AND a.inicio < :fim
+              AND a.fim    > :inicio
+            """)
+    List<Agendamento> findOverlapping(
             @Param("servicoId") Long servicoId,
-            @Param("inicio") LocalDate inicio,
-            @Param("fim") LocalDate fim
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim
     );
+
+    @Query("""
+            SELECT (COUNT(a) > 0) FROM Agendamento a
+            WHERE a.servico.id = :servicoId
+              AND a.status <> :statusExcluido
+              AND a.inicio < :fim
+              AND a.fim    > :inicio
+            """)
+    boolean existsConflict(
+            @Param("servicoId") Long servicoId,
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim") LocalDateTime fim,
+            @Param("statusExcluido") StatusAgendamento statusExcluido
+    );
+
+    List<Agendamento> findByClienteIdOrderByInicioDesc(Long clienteId);
 }

@@ -9,128 +9,160 @@ import {
 } from '../services/agendamentoService';
 
 const DIAS = [
-  { id: 'MONDAY', label: 'Segunda' },
-  { id: 'TUESDAY', label: 'Terça' },
-  { id: 'WEDNESDAY', label: 'Quarta' },
-  { id: 'THURSDAY', label: 'Quinta' },
-  { id: 'FRIDAY', label: 'Sexta' },
-  { id: 'SATURDAY', label: 'Sábado' },
-  { id: 'SUNDAY', label: 'Domingo' },
+  { id: 'MONDAY', label: 'Segunda', curto: 'Seg' },
+  { id: 'TUESDAY', label: 'Terça', curto: 'Ter' },
+  { id: 'WEDNESDAY', label: 'Quarta', curto: 'Qua' },
+  { id: 'THURSDAY', label: 'Quinta', curto: 'Qui' },
+  { id: 'FRIDAY', label: 'Sexta', curto: 'Sex' },
+  { id: 'SATURDAY', label: 'Sábado', curto: 'Sáb' },
+  { id: 'SUNDAY', label: 'Domingo', curto: 'Dom' },
 ];
 
-const DURACOES = [30, 45, 60, 90, 120];
+/** Granularidade salva nas regras (API de blocos derivados). Agenda contínua do cliente não depende deste valor. */
+const DURACAO_BLOCO_PADRAO_MIN = 30;
 
-function intervaloVazio() {
-  return { horaInicio: '08:00', horaFim: '12:00', duracaoMinutos: 60 };
+function novaRegra() {
+  return {
+    diaInicio: 'MONDAY',
+    diaFim: 'FRIDAY',
+    ativa: true,
+    intervalos: [{ horaInicio: '08:00', horaFim: '12:00' }],
+  };
+}
+
+function rangeDias(inicio, fim) {
+  const idxIni = DIAS.findIndex((d) => d.id === inicio);
+  const idxFim = DIAS.findIndex((d) => d.id === fim);
+  if (idxIni < 0 || idxFim < 0) return [];
+  const labels = [];
+  let i = idxIni;
+  while (true) {
+    labels.push(DIAS[i].curto);
+    if (i === idxFim) break;
+    i = (i + 1) % DIAS.length;
+    if (labels.length > 7) break;
+  }
+  return labels;
+}
+
+function ehPernoite(horaInicio, horaFim) {
+  return horaInicio && horaFim && horaInicio >= horaFim;
 }
 
 export default function DisponibilidadeSemanalEditor({ servicoId }) {
-  const [estado, setEstado] = useState(
-    DIAS.reduce((acc, dia) => ({ ...acc, [dia.id]: { ativo: false, intervalos: [] } }), {})
-  );
+  const [regras, setRegras] = useState([novaRegra()]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     listarRegrasSemanais(servicoId)
       .then(({ data }) => {
-        const novo = DIAS.reduce(
-          (acc, dia) => ({ ...acc, [dia.id]: { ativo: false, intervalos: [] } }),
-          {}
+        if (!data?.length) {
+          setRegras([novaRegra()]);
+          return;
+        }
+        setRegras(
+          data.map((r) => ({
+            diaInicio: r.diaInicio,
+            diaFim: r.diaFim,
+            ativa: r.ativa,
+            intervalos: r.intervalos.map((it) => ({
+              horaInicio: it.horaInicio.slice(0, 5),
+              horaFim: it.horaFim.slice(0, 5),
+            })),
+          }))
         );
-        data.forEach((regra) => {
-          const dia = novo[regra.diaSemana];
-          if (!dia) return;
-          dia.ativo = true;
-          dia.intervalos.push({
-            horaInicio: regra.horaInicio.slice(0, 5),
-            horaFim: regra.horaFim.slice(0, 5),
-            duracaoMinutos: regra.duracaoMinutos,
-          });
-        });
-        setEstado(novo);
       })
       .catch(() => toast.error('Erro ao carregar disponibilidade.'))
       .finally(() => setCarregando(false));
   }, [servicoId]);
 
-  function alternarDia(diaId) {
-    setEstado((prev) => {
-      const dia = prev[diaId];
-      const ativo = !dia.ativo;
-      return {
-        ...prev,
-        [diaId]: {
-          ativo,
-          intervalos: ativo && dia.intervalos.length === 0 ? [intervaloVazio()] : dia.intervalos,
-        },
-      };
-    });
+  function atualizarRegra(idx, patch) {
+    setRegras((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   }
 
-  function atualizarIntervalo(diaId, idx, campo, valor) {
-    setEstado((prev) => ({
-      ...prev,
-      [diaId]: {
-        ...prev[diaId],
-        intervalos: prev[diaId].intervalos.map((it, i) =>
-          i === idx ? { ...it, [campo]: campo === 'duracaoMinutos' ? Number(valor) : valor } : it
-        ),
-      },
-    }));
+  function adicionarRegra() {
+    setRegras((prev) => [...prev, novaRegra()]);
   }
 
-  function adicionarIntervalo(diaId) {
-    setEstado((prev) => ({
-      ...prev,
-      [diaId]: {
-        ...prev[diaId],
-        intervalos: [...prev[diaId].intervalos, intervaloVazio()],
-      },
-    }));
+  function removerRegra(idx) {
+    setRegras((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function removerIntervalo(diaId, idx) {
-    setEstado((prev) => ({
-      ...prev,
-      [diaId]: {
-        ...prev[diaId],
-        intervalos: prev[diaId].intervalos.filter((_, i) => i !== idx),
-      },
-    }));
+  function adicionarIntervalo(idx) {
+    setRegras((prev) =>
+      prev.map((r, i) =>
+        i === idx
+          ? { ...r, intervalos: [...r.intervalos, { horaInicio: '14:00', horaFim: '18:00' }] }
+          : r
+      )
+    );
+  }
+
+  function atualizarIntervalo(rIdx, iIdx, campo, valor) {
+    setRegras((prev) =>
+      prev.map((r, i) =>
+        i === rIdx
+          ? {
+              ...r,
+              intervalos: r.intervalos.map((it, j) =>
+                j === iIdx ? { ...it, [campo]: valor } : it
+              ),
+            }
+          : r
+      )
+    );
+  }
+
+  function removerIntervalo(rIdx, iIdx) {
+    setRegras((prev) =>
+      prev.map((r, i) =>
+        i === rIdx
+          ? { ...r, intervalos: r.intervalos.filter((_, j) => j !== iIdx) }
+          : r
+      )
+    );
   }
 
   async function salvar() {
-    const regras = [];
-    for (const dia of DIAS) {
-      const cfg = estado[dia.id];
-      if (!cfg.ativo) continue;
-      for (const intervalo of cfg.intervalos) {
-        if (intervalo.horaInicio >= intervalo.horaFim) {
-          toast.error(`Em ${dia.label}: a hora de início deve ser menor que a hora de fim.`);
+    if (!regras.length) {
+      toast.error('Cadastre pelo menos uma regra.');
+      return;
+    }
+    for (const r of regras) {
+      if (!r.intervalos.length) {
+        toast.error('Cada regra precisa ter pelo menos um intervalo.');
+        return;
+      }
+      for (const it of r.intervalos) {
+        if (!it.horaInicio || !it.horaFim) {
+          toast.error('Preencha início e fim de todos os intervalos.');
           return;
         }
-        regras.push({
-          diaSemana: dia.id,
-          horaInicio: `${intervalo.horaInicio}:00`,
-          horaFim: `${intervalo.horaFim}:00`,
-          duracaoMinutos: intervalo.duracaoMinutos,
-        });
+        if (it.horaInicio === it.horaFim) {
+          toast.error('Intervalo com início e fim iguais é inválido.');
+          return;
+        }
       }
     }
 
-    if (regras.length === 0) {
-      toast.error('Cadastre pelo menos um intervalo.');
-      return;
-    }
+    const payload = regras.map((r) => ({
+      diaInicio: r.diaInicio,
+      diaFim: r.diaFim,
+      duracaoPadraoMinutos: DURACAO_BLOCO_PADRAO_MIN,
+      ativa: r.ativa,
+      intervalos: r.intervalos.map((it) => ({
+        horaInicio: `${it.horaInicio}:00`,
+        horaFim: `${it.horaFim}:00`,
+      })),
+    }));
 
     setSalvando(true);
     try {
-      await definirDisponibilidadeSemanal(servicoId, regras);
-      toast.success('Disponibilidade semanal atualizada!');
+      await definirDisponibilidadeSemanal(servicoId, payload);
+      toast.success('Disponibilidade atualizada!');
     } catch (err) {
-      const msg = err.response?.data?.message ?? 'Erro ao salvar disponibilidade.';
-      toast.error(msg);
+      toast.error(err.response?.data?.message ?? 'Erro ao salvar disponibilidade.');
     } finally {
       setSalvando(false);
     }
@@ -149,78 +181,132 @@ export default function DisponibilidadeSemanalEditor({ servicoId }) {
   return (
     <Card className="py-0">
       <CardContent className="p-6">
-        <h2 className="font-semibold">Disponibilidade semanal</h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          Defina os dias e intervalos em que esse serviço aceita reservas. Os blocos clicáveis para o cliente são
-          gerados automaticamente.
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">Disponibilidade</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Defina blocos de dias contínuos (ex: <strong>sexta → domingo</strong>) com um ou
+              mais intervalos de horário (ex: <strong>08:00–12:00</strong> e{' '}
+              <strong>14:00–18:00</strong>). Quando o fim do horário for menor que o início,
+              o intervalo é tratado como <strong>pernoite</strong>. O cliente escolhe horários
+              livres de forma contínua; não é necessário configurar tamanho de &quot;slot&quot;.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            className="h-9 w-9 shrink-0"
+            onClick={adicionarRegra}
+            aria-label="Adicionar regra de disponibilidade"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
 
         <div className="mt-4 space-y-3">
-          {DIAS.map((dia) => {
-            const cfg = estado[dia.id];
+          {regras.map((regra, idx) => {
+            const previewDias = rangeDias(regra.diaInicio, regra.diaFim).join(' · ');
             return (
-              <div key={dia.id} className="rounded-lg border p-4">
-                <div className="flex items-center justify-between">
+              <div key={idx} className="rounded-lg border p-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <label className="flex items-center gap-2 text-sm font-medium">
                     <input
                       type="checkbox"
-                      checked={cfg.ativo}
-                      onChange={() => alternarDia(dia.id)}
+                      checked={regra.ativa}
+                      onChange={(e) => atualizarRegra(idx, { ativa: e.target.checked })}
                     />
-                    {dia.label}
+                    Ativa
                   </label>
-                  {cfg.ativo && (
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">De</span>
+                    <select
+                      value={regra.diaInicio}
+                      onChange={(e) => atualizarRegra(idx, { diaInicio: e.target.value })}
+                      className="h-9 rounded-md border border-input bg-background px-2"
+                    >
+                      {DIAS.map((d) => (
+                        <option key={d.id} value={d.id}>{d.label}</option>
+                      ))}
+                    </select>
+                    <span className="text-muted-foreground">até</span>
+                    <select
+                      value={regra.diaFim}
+                      onChange={(e) => atualizarRegra(idx, { diaFim: e.target.value })}
+                      className="h-9 rounded-md border border-input bg-background px-2"
+                    >
+                      {DIAS.map((d) => (
+                        <option key={d.id} value={d.id}>{d.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="ml-auto flex items-center gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="gap-1"
-                      onClick={() => adicionarIntervalo(dia.id)}
+                      onClick={() => adicionarIntervalo(idx)}
                     >
                       <Plus className="h-3.5 w-3.5" /> Intervalo
                     </Button>
-                  )}
+                    {regras.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-destructive"
+                        onClick={() => removerRegra(idx)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
-                {cfg.ativo && (
-                  <div className="mt-3 space-y-2">
-                    {cfg.intervalos.map((intervalo, idx) => (
-                      <div key={idx} className="flex flex-wrap items-center gap-2">
+                {previewDias && (
+                  <p className="text-xs text-muted-foreground">Dias: {previewDias}</p>
+                )}
+
+                <div className="space-y-2">
+                  {regra.intervalos.map((it, iIdx) => {
+                    const pernoite = ehPernoite(it.horaInicio, it.horaFim);
+                    return (
+                      <div key={iIdx} className="flex flex-wrap items-center gap-2">
                         <input
                           type="time"
-                          value={intervalo.horaInicio}
-                          onChange={(e) => atualizarIntervalo(dia.id, idx, 'horaInicio', e.target.value)}
+                          value={it.horaInicio}
+                          onChange={(e) => atualizarIntervalo(idx, iIdx, 'horaInicio', e.target.value)}
                           className="h-9 w-28 rounded-md border border-input bg-background px-2 text-sm"
                         />
                         <span className="text-sm text-muted-foreground">até</span>
                         <input
                           type="time"
-                          value={intervalo.horaFim}
-                          onChange={(e) => atualizarIntervalo(dia.id, idx, 'horaFim', e.target.value)}
+                          value={it.horaFim}
+                          onChange={(e) => atualizarIntervalo(idx, iIdx, 'horaFim', e.target.value)}
                           className="h-9 w-28 rounded-md border border-input bg-background px-2 text-sm"
                         />
-                        <select
-                          value={intervalo.duracaoMinutos}
-                          onChange={(e) => atualizarIntervalo(dia.id, idx, 'duracaoMinutos', e.target.value)}
-                          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-                        >
-                          {DURACOES.map((d) => (
-                            <option key={d} value={d}>{d} min</option>
-                          ))}
-                        </select>
+                        {pernoite && (
+                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-200">
+                            pernoite (dia seguinte)
+                          </span>
+                        )}
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           className="h-9 w-9 text-destructive"
-                          onClick={() => removerIntervalo(dia.id, idx)}
+                          onClick={() => removerIntervalo(idx, iIdx)}
+                          disabled={regra.intervalos.length === 1}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

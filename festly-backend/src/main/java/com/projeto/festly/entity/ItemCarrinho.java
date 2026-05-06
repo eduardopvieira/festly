@@ -3,8 +3,7 @@ package com.projeto.festly.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "itens_carrinho")
@@ -19,17 +18,17 @@ public class ItemCarrinho {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "carrinho_id", nullable = false)
     private Carrinho carrinho;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "servico_id", nullable = false)
     private Servico servico;
 
-    @Column(name = "data_evento", nullable = false)
-    private LocalDate dataEvento;
+    @Column(nullable = false)
+    private LocalDateTime inicio;
 
-    @Column(name = "horario_evento")
-    private LocalTime horarioEvento;
+    @Column(nullable = false)
+    private LocalDateTime fim;
 }
