@@ -43,13 +43,38 @@ public class ServicoService {
         return ServicoResponse.from(repository.save(servico));
     }
 
-    public List<ServicoResponse> listar(CategoriaServico categoria, BigDecimal precoMax, Boolean disponivel) {
-        List<Servico> servicos = repository.findAll();
+    public List<ServicoResponse> listar(String nome, CategoriaServico categoria, String cidade, BigDecimal precoMax) {
+        List<Servico> servicos;
+
+        if (nome != null && !nome.isBlank()) {
+            servicos = repository.findByNomeContainingIgnoreCase(nome);
+        }
+
+        else if (categoria != null && precoMax != null) {
+            servicos = repository.findByCategoriaAndPrecoLessThanEqual(categoria, precoMax);
+        }
+
+        else if (categoria != null && cidade != null && !cidade.isBlank()) {
+            servicos = repository.findByCategoriaAndCidadeIgnoreCase(categoria, cidade);
+        }
+
+        else if (precoMax != null) {
+            servicos = repository.findByPrecoLessThanEqual(precoMax);
+        }
+
+        else if (cidade != null && !cidade.isBlank()) {
+            servicos = repository.findByCidadeIgnoreCase(cidade);
+        }
+
+        else if (categoria != null) {
+            servicos = repository.findByCategoria(categoria);
+        }
+
+        else {
+            servicos = repository.findAll();
+        }
 
         return servicos.stream()
-                .filter(s -> categoria == null || s.getCategoria() == categoria)
-                .filter(s -> precoMax == null || s.getPreco().compareTo(precoMax) <= 0)
-                .filter(s -> disponivel == null || s.isDisponivel() == disponivel)
                 .map(ServicoResponse::from)
                 .toList();
     }

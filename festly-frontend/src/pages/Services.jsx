@@ -30,11 +30,23 @@ export default function Services() {
   const [categoriaAtiva, setCategoriaAtiva] = useState('TODOS');
 
   useEffect(() => {
-    listarServicosPublicos()
-      .then(({ data }) => setServicos(data))
+    setLoading(true);
+
+    const filtrosAtivos = {
+      nome: searchTerm,
+      cidade: cidadeTerm,
+      categoria: categoriaAtiva
+    };
+
+    listarServicosPublicos(filtrosAtivos)
+      .then(({ data }) => {
+        setServicos(data);
+        setError(false);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, []);
+
+  }, [searchTerm, cidadeTerm, categoriaAtiva]);
 
   function handleBuscar(e) {
     e.preventDefault();
@@ -42,17 +54,7 @@ export default function Services() {
     setCidadeTerm(cidadeInput);
   }
 
-  const filtered = servicos.filter((s) => {
-    const term = searchTerm.toLowerCase();
-    const cidade = cidadeTerm.toLowerCase();
-    const matchSearch =
-      !term ||
-      s.nome.toLowerCase().includes(term) ||
-      (s.descricao ?? '').toLowerCase().includes(term);
-    const matchCidade = !cidade || (s.cidade ?? '').toLowerCase().includes(cidade);
-    const matchCategoria = categoriaAtiva === 'TODOS' || s.categoria === categoriaAtiva;
-    return matchSearch && matchCidade && matchCategoria;
-  });
+  const filtered = servicos;
 
   return (
     <div className="min-h-full">
