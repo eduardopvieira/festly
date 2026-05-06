@@ -1,11 +1,9 @@
 package com.projeto.festly.dto;
 
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Data
 public class AgendamentoRequest {
@@ -16,10 +14,9 @@ public class AgendamentoRequest {
     @NotNull(message = "O ID do cliente é obrigatório")
     private Long clienteId;
 
-    @NotNull(message = "A data do evento é obrigatória")
-    @FutureOrPresent(message = "A data do agendamento não pode estar no passado")
-    private LocalDate dataEvento;
+    @NotNull(message = "O início é obrigatório")
+    private LocalDateTime inicio;
 
-    @NotNull(message = "O horário do evento é obrigatório")
-    private LocalTime horarioEvento;
+    @NotNull(message = "O fim é obrigatório")
+    private LocalDateTime fim;
 }

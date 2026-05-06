@@ -24,17 +24,21 @@ function avatarGradient(nome) {
   return AVATAR_GRADIENTS[code];
 }
 
-function formatDate(isoString) {
-  if (!isoString) return '';
-  const [year, month, day] = isoString.split('-');
-  return `${day}/${month}/${year}`;
+function fmtIntervalo(inicioISO, fimISO) {
+  if (!inicioISO || !fimISO) return '';
+  const ini = new Date(inicioISO);
+  const fim = new Date(fimISO);
+  const data = ini.toLocaleDateString('pt-BR');
+  const dataFim = fim.toLocaleDateString('pt-BR');
+  const hi = `${String(ini.getHours()).padStart(2, '0')}:${String(ini.getMinutes()).padStart(2, '0')}`;
+  const hf = `${String(fim.getHours()).padStart(2, '0')}:${String(fim.getMinutes()).padStart(2, '0')}`;
+  if (data === dataFim) return `${data} · ${hi} → ${hf}`;
+  return `${data} ${hi} → ${dataFim} ${hf}`;
 }
 
 function CartItem({ item, onRemove }) {
   const servico = item.servico;
-  const dataEvento = item.dataEvento;
-  const horarioEvento = item.horarioEvento?.slice(0, 5);
-  
+
   const [from, to] = avatarGradient(servico.nome);
   const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
   const price = `R$ ${Number(servico.preco).toFixed(2).replace('.', ',')}`;
@@ -50,11 +54,10 @@ function CartItem({ item, onRemove }) {
 
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm leading-tight">{servico.nome}</p>
-        
+
         <p className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
           <Calendar className="h-3 w-3" />
-          Agendado para: {formatDate(dataEvento)}
-          {horarioEvento && <span className="ml-1">· {horarioEvento}</span>}
+          {fmtIntervalo(item.inicio, item.fim)}
         </p>
 
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -70,7 +73,7 @@ function CartItem({ item, onRemove }) {
       <Button
         variant="ghost"
         size="icon-sm"
-        onClick={() => onRemove(servico.id)}
+        onClick={() => onRemove(item.id)}
         aria-label="Remover"
         className="text-muted-foreground hover:text-destructive"
       >
@@ -85,9 +88,9 @@ export default function Carrinho() {
   const navigate = useNavigate();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  async function handleRemove(servicoId) {
+  async function handleRemove(itemId) {
     try {
-      await removeItem(servicoId);
+      await removeItem(itemId);
     } catch {
       toast.error('Erro ao remover serviço do carrinho.');
     }

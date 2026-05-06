@@ -1,16 +1,16 @@
 package com.projeto.festly.dto;
 
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import java.time.LocalDate;
-import java.time.LocalTime;
+
+import java.time.LocalDateTime;
 
 @Data
 public class ItemCarrinhoRequest {
-    @NotNull(message = "A data do evento é obrigatória")
-    @FutureOrPresent(message = "A data deve ser hoje ou no futuro")
-    private LocalDate dataEvento;
 
-    private LocalTime horarioEvento;
+    @NotNull(message = "O início é obrigatório")
+    private LocalDateTime inicio;
+
+    @NotNull(message = "O fim é obrigatório")
+    private LocalDateTime fim;
 }

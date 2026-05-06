@@ -7,16 +7,16 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Bloco de duração fixa derivado da agenda contínua. Útil para uma UI mais simples
- * que não suporta drag-select, mostrando "slots" prontos para clique.
+ * Intervalo contínuo da agenda de um serviço, devolvido pelo endpoint
+ * de listagem de disponibilidade. O cliente usa esse modelo para renderizar
+ * a agenda como faixas (preferencial) ou para derivar blocos de duração fixa.
  */
 @Data
 @Builder
 @AllArgsConstructor
-public class BlocoHorarioResponse {
+public class IntervaloAgendaResponse {
 
     private LocalDateTime inicio;
     private LocalDateTime fim;
-    private int duracaoMinutos;
     private BlocoStatus status;
 }

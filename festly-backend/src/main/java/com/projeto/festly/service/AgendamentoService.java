@@ -12,10 +12,11 @@ import com.projeto.festly.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,7 +29,14 @@ public class AgendamentoService {
     private final UsuarioRepository usuarioRepository;
     private final DisponibilidadeService disponibilidadeService;
 
-    @Transactional
+    /**
+     * Cria um agendamento. Camadas de proteção contra dupla reserva:
+     *  1. Transação SERIALIZABLE para que checks e insert sejam atômicos.
+     *  2. Verificação por overlap em SQL (existsConflict) antes de inserir.
+     *  3. EXCLUDE constraint do PostgreSQL (no_overlap_agendamento) como
+     *     última linha de defesa — converte falha em DataIntegrityViolation.
+     */
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public AgendamentoResponse agendar(AgendamentoRequest request) {
         Servico servico = servicoRepository.findById(request.getServicoId())
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -38,53 +46,60 @@ public class AgendamentoService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Cliente não encontrado: " + request.getClienteId()));
 
-        LocalDateTime momento = LocalDateTime.of(request.getDataEvento(), request.getHorarioEvento());
-        if (momento.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("O horário escolhido já passou.");
-        }
+        LocalDateTime inicio = request.getInicio();
+        LocalDateTime fim = request.getFim();
+        validarIntervalo(inicio, fim);
 
-        boolean dentroDaAgenda = disponibilidadeService.horarioPermitido(
-                request.getServicoId(),
-                request.getDataEvento(),
-                request.getHorarioEvento()
-        );
-        if (!dentroDaAgenda) {
+        if (!disponibilidadeService.intervaloDentroDaAgenda(servico.getId(), inicio, fim)) {
             throw new IllegalStateException("Este horário está fora da agenda do prestador.");
         }
 
-        boolean jaReservado = repository.existsByServicoIdAndDataEventoAndHorarioEventoAndStatusNot(
-                request.getServicoId(),
-                request.getDataEvento(),
-                request.getHorarioEvento(),
-                StatusAgendamento.CANCELADO
-        );
-        if (jaReservado) {
+        if (repository.existsConflict(servico.getId(), inicio, fim, StatusAgendamento.CANCELADO)) {
             throw new IllegalStateException("Este horário já foi reservado.");
         }
 
         Agendamento agendamento = Agendamento.builder()
                 .servico(servico)
                 .cliente(cliente)
-                .dataEvento(request.getDataEvento())
-                .horarioEvento(request.getHorarioEvento())
+                .inicio(inicio)
+                .fim(fim)
                 .status(StatusAgendamento.PENDENTE)
                 .build();
 
         try {
             return AgendamentoResponse.from(repository.saveAndFlush(agendamento));
-        } catch (DataIntegrityViolationException ex) {
+        } catch (DataIntegrityViolationException | PessimisticLockingFailureException ex) {
             throw new IllegalStateException("Este horário acabou de ser reservado por outro cliente.");
         }
     }
 
-    @Transactional(readOnly = true)
-    public List<String> buscarDatasOcupadas(Long servicoId) {
-        if (!servicoRepository.existsById(servicoId)) {
-            throw new EntityNotFoundException("Serviço não encontrado: " + servicoId);
+    @Transactional
+    public void cancelar(Long agendamentoId, Long clienteId) {
+        Agendamento agendamento = repository.findById(agendamentoId)
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado: " + agendamentoId));
+        if (!agendamento.getCliente().getId().equals(clienteId)) {
+            throw new IllegalStateException("Você não pode cancelar este agendamento.");
         }
-        return repository.findDatasOcupadasByServicoId(servicoId)
-                .stream()
-                .map(LocalDate::toString)
+        if (agendamento.getStatus() == StatusAgendamento.CANCELADO) return;
+        agendamento.setStatus(StatusAgendamento.CANCELADO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AgendamentoResponse> listarDoCliente(Long clienteId) {
+        return repository.findByClienteIdOrderByInicioDesc(clienteId).stream()
+                .map(AgendamentoResponse::from)
                 .toList();
+    }
+
+    static void validarIntervalo(LocalDateTime inicio, LocalDateTime fim) {
+        if (inicio == null || fim == null) {
+            throw new IllegalArgumentException("Início e fim são obrigatórios.");
+        }
+        if (!inicio.isBefore(fim)) {
+            throw new IllegalArgumentException("O fim deve ser posterior ao início.");
+        }
+        if (inicio.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("O horário escolhido já passou.");
+        }
     }
 }
