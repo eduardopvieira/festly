@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, User, Globe, Search, Menu, PartyPopper, LogOut, ShoppingCart,
+  LayoutDashboard, Briefcase, User, Globe, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +22,7 @@ const PRESTADOR_NAV = [
 const CLIENTE_NAV = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
   { icon: Search,          label: 'Explorar Serviços', to: '/dashboard/servicos' },
+  { icon: CalendarDays,    label: 'Meus Agendamentos', to: '/meus-agendamentos' },
   { icon: User,            label: 'Perfil', to: '/perfil' },
 ];
 
