@@ -60,8 +60,8 @@ CREATE INDEX idx_intervalo_regra ON intervalos_horario (regra_id);
 ALTER TABLE agendamentos DROP COLUMN IF EXISTS data_evento;
 ALTER TABLE agendamentos DROP COLUMN IF EXISTS horario_evento;
 
-ALTER TABLE agendamentos ADD COLUMN inicio TIMESTAMP NOT NULL DEFAULT NOW();
-ALTER TABLE agendamentos ADD COLUMN fim    TIMESTAMP NOT NULL DEFAULT NOW();
+ALTER TABLE agendamentos ADD COLUMN inicio TIMESTAMP NOT NULL DEFAULT '2000-01-01 00:00:00';
+ALTER TABLE agendamentos ADD COLUMN fim    TIMESTAMP NOT NULL DEFAULT '2000-01-01 01:00:00';
 ALTER TABLE agendamentos ALTER COLUMN inicio DROP DEFAULT;
 ALTER TABLE agendamentos ALTER COLUMN fim    DROP DEFAULT;
 ALTER TABLE agendamentos ADD CONSTRAINT ck_agendamento_intervalo CHECK (inicio < fim);
@@ -84,8 +84,8 @@ ALTER TABLE agendamentos ADD CONSTRAINT no_overlap_agendamento
 ALTER TABLE itens_carrinho DROP COLUMN IF EXISTS data_evento;
 ALTER TABLE itens_carrinho DROP COLUMN IF EXISTS horario_evento;
 
-ALTER TABLE itens_carrinho ADD COLUMN inicio TIMESTAMP NOT NULL DEFAULT NOW();
-ALTER TABLE itens_carrinho ADD COLUMN fim    TIMESTAMP NOT NULL DEFAULT NOW();
+ALTER TABLE itens_carrinho ADD COLUMN inicio TIMESTAMP NOT NULL DEFAULT '2000-01-01 00:00:00';
+ALTER TABLE itens_carrinho ADD COLUMN fim    TIMESTAMP NOT NULL DEFAULT '2000-01-01 01:00:00';
 ALTER TABLE itens_carrinho ALTER COLUMN inicio DROP DEFAULT;
 ALTER TABLE itens_carrinho ALTER COLUMN fim    DROP DEFAULT;
 ALTER TABLE itens_carrinho ADD CONSTRAINT ck_item_carrinho_intervalo CHECK (inicio < fim);

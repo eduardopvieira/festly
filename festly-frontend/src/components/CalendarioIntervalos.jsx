@@ -32,15 +32,6 @@ function fmtData(data) {
   return `${ano}-${mes}-${dia}`;
 }
 
-function fmtHoraISO(date) {
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${d}T${hh}:${mm}:00`;
-}
-
 function fmtHora(date) {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
@@ -470,4 +461,3 @@ function BarraSegmento({ seg, onRemoverMeu }) {
   );
 }
 
-export { fmtHoraISO };

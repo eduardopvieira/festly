@@ -15,7 +15,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
-import CalendarioIntervalos, { fmtHoraISO } from './CalendarioIntervalos';
+import AgendadorIntervalos from './AgendadorIntervalos';
+import { fmtHoraISO } from '@/lib/utils';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -26,15 +27,6 @@ const CATEGORIA_LABEL = {
 const COBRANCA_SUFFIX = {
   POR_EVENTO: '/evento', POR_PESSOA: '/pessoa', POR_HORA: '/hora',
 };
-
-function fmtBR(date) {
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 /** API pode enviar camelCase, snake_case ou enum como objeto. */
 function tipoUsuarioNormalizado(user) {
@@ -177,12 +169,12 @@ export default function CatalogoCard({ servico }) {
           <AlertDialogHeader className="shrink-0 space-y-1 text-left">
             <AlertDialogTitle className="text-base leading-tight">Agendar {servico.nome}</AlertDialogTitle>
             <AlertDialogDescription className="text-xs leading-snug">
-              Arraste nas faixas verdes para escolher horários. Clique na faixa roxa para retirar do carrinho.
+              Escolha uma data e o horário desejado. Você pode adicionar múltiplos intervalos.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-            <CalendarioIntervalos
+            <AgendadorIntervalos
               servicoId={servico.id}
               selecoes={selecoes}
               onAdicionarSelecao={adicionarSelecao}
@@ -191,17 +183,6 @@ export default function CatalogoCard({ servico }) {
               refreshKey={refreshKey}
             />
           </div>
-
-          {selecoes.length > 0 && (
-            <div className="shrink-0 rounded-md border bg-muted/30 px-2 py-1.5 text-xs space-y-1 max-h-[20vh] overflow-y-auto">
-              <strong>{selecoes.length}</strong> intervalo(s) selecionado(s):
-              <ul className="mt-0.5 space-y-0.5 text-[11px] text-muted-foreground">
-                {selecoes.map((s, i) => (
-                  <li key={i}>· {fmtBR(s.inicio)} → {fmtBR(s.fim)}</li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <AlertDialogFooter className="shrink-0 sm:justify-end">
             <AlertDialogCancel>Fechar</AlertDialogCancel>
