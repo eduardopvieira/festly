@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
-import CalendarioIntervalos, { fmtHoraISO } from './CalendarioIntervalos';
+import SeletorHorarios, { fmtHoraISO } from './SeletorHorarios';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -171,18 +171,17 @@ export default function CatalogoCard({ servico }) {
 
       <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <AlertDialogContent
-          size="wide"
-          className="max-h-[min(92vh,800px)] gap-2 overflow-hidden p-3 sm:max-h-[min(90vh,760px)] sm:p-4 flex flex-col"
+          className="w-[90%] max-w-[90%] h-[70vh] max-h-[70vh] gap-0 overflow-hidden p-4 flex flex-col"
         >
           <AlertDialogHeader className="shrink-0 space-y-1 text-left">
             <AlertDialogTitle className="text-base leading-tight">Agendar {servico.nome}</AlertDialogTitle>
             <AlertDialogDescription className="text-xs leading-snug">
-              Arraste nas faixas verdes para escolher horários. Clique na faixa roxa para retirar do carrinho.
+              Toque em um horário verde para selecioná-lo. Toque novamente para desfazer.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-            <CalendarioIntervalos
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <SeletorHorarios
               servicoId={servico.id}
               selecoes={selecoes}
               onAdicionarSelecao={adicionarSelecao}
