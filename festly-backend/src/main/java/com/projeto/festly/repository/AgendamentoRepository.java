@@ -12,13 +12,13 @@ import java.util.List;
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
     /**
-     * Agendamentos ativos do serviço cujo intervalo intersecta [inicio, fim).
-     * Critério de overlap: novo.inicio < existente.fim AND novo.fim > existente.inicio
+     * Agendamentos ativos (nem CANCELADO nem REJEITADO) cujo intervalo intersecta [inicio, fim).
      */
     @Query("""
             SELECT a FROM Agendamento a
             WHERE a.servico.id = :servicoId
               AND a.status <> com.projeto.festly.entity.StatusAgendamento.CANCELADO
+              AND a.status <> com.projeto.festly.entity.StatusAgendamento.REJEITADO
               AND a.inicio < :fim
               AND a.fim    > :inicio
             """)
@@ -31,16 +31,23 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     @Query("""
             SELECT (COUNT(a) > 0) FROM Agendamento a
             WHERE a.servico.id = :servicoId
-              AND a.status <> :statusExcluido
+              AND a.status <> com.projeto.festly.entity.StatusAgendamento.CANCELADO
+              AND a.status <> com.projeto.festly.entity.StatusAgendamento.REJEITADO
               AND a.inicio < :fim
               AND a.fim    > :inicio
             """)
-    boolean existsConflict(
+    boolean existsActiveConflict(
             @Param("servicoId") Long servicoId,
             @Param("inicio") LocalDateTime inicio,
-            @Param("fim") LocalDateTime fim,
-            @Param("statusExcluido") StatusAgendamento statusExcluido
+            @Param("fim") LocalDateTime fim
     );
 
     List<Agendamento> findByClienteIdOrderByInicioDesc(Long clienteId);
+
+    @Query("""
+            SELECT a FROM Agendamento a
+            WHERE a.servico.usuario.id = :prestadorId
+            ORDER BY a.inicio DESC
+            """)
+    List<Agendamento> findByPrestadorId(@Param("prestadorId") Long prestadorId);
 }

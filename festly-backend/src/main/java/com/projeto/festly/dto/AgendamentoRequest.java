@@ -19,4 +19,6 @@ public class AgendamentoRequest {
 
     @NotNull(message = "O fim é obrigatório")
     private LocalDateTime fim;
+
+    private Integer numeroPessoas;
 }

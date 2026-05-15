@@ -37,4 +37,7 @@ public class Agendamento {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusAgendamento status;
+
+    @Column(name = "numero_pessoas")
+    private Integer numeroPessoas;
 }

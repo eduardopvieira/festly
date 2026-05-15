@@ -35,3 +35,15 @@ export function cancelarAgendamento(agendamentoId, clienteId) {
     params: { clienteId },
   });
 }
+
+export function listarAgendamentosPrestador() {
+  return api.get('/agendamentos/prestador');
+}
+
+export function confirmarAgendamento(id) {
+  return api.post(`/agendamentos/${id}/confirmar`);
+}
+
+export function rejeitarAgendamento(id) {
+  return api.post(`/agendamentos/${id}/rejeitar`);
+}

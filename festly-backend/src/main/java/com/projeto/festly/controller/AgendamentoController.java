@@ -2,12 +2,14 @@ package com.projeto.festly.controller;
 
 import com.projeto.festly.dto.AgendamentoRequest;
 import com.projeto.festly.dto.AgendamentoResponse;
+import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.service.AgendamentoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,5 +38,28 @@ public class AgendamentoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancelar(@PathVariable Long agendamentoId, @RequestParam Long clienteId) {
         service.cancelar(agendamentoId, clienteId);
+    }
+
+    @GetMapping("/prestador")
+    @PreAuthorize("hasRole('PRESTADOR')")
+    public ResponseEntity<List<AgendamentoResponse>> listarDoPrestador(
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(service.listarDoPrestador(usuario.getId()));
+    }
+
+    @PostMapping("/{id}/confirmar")
+    @PreAuthorize("hasRole('PRESTADOR')")
+    public ResponseEntity<AgendamentoResponse> confirmar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(service.confirmar(id, usuario.getId()));
+    }
+
+    @PostMapping("/{id}/rejeitar")
+    @PreAuthorize("hasRole('PRESTADOR')")
+    public ResponseEntity<AgendamentoResponse> rejeitar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(service.rejeitar(id, usuario.getId()));
     }
 }

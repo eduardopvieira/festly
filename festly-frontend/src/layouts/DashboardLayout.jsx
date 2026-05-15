@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays,
+  LayoutDashboard, Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays, ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,14 +10,15 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 
-const PRESTADOR_ONLY_PATHS = ['/meus-servicos'];
+const PRESTADOR_ONLY_PATHS = ['/meus-servicos', '/solicitacoes'];
 
 const PRESTADOR_NAV = [
-  { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
-  { icon: Briefcase,       label: 'Meus Serviços', to: '/meus-servicos' },
-  { icon: Search,          label: 'Explorar Serviços', to: '/dashboard/servicos' },
-  { icon: CalendarDays,    label: 'Meus Agendamentos', to: '/meus-agendamentos' },
-  { icon: User,            label: 'Perfil', to: '/perfil' },
+  { icon: LayoutDashboard, label: 'Dashboard',          to: '/dashboard' },
+  { icon: Briefcase,       label: 'Meus Serviços',      to: '/meus-servicos' },
+  { icon: ClipboardList,   label: 'Solicitações',       to: '/solicitacoes' },
+  { icon: Search,          label: 'Explorar Serviços',  to: '/dashboard/servicos' },
+  { icon: CalendarDays,    label: 'Meus Agendamentos',  to: '/meus-agendamentos' },
+  { icon: User,            label: 'Perfil',             to: '/perfil' },
 ];
 
 const CLIENTE_NAV = [

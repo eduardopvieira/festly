@@ -10,12 +10,12 @@ import Services from '../pages/Services';
 import Dashboard from '../pages/Dashboard';
 import Perfil from '../pages/Perfil';
 import MeusServicos from '../pages/MeusServicos';
-import NovoServico from '../pages/NovoServico';
+import ServicoWizard from '../pages/ServicoWizard';
 import EditarServico from '../pages/EditarServico';
 import Carrinho from '../pages/Carrinho';
 import MeusAgendamentos from '../pages/MeusAgendamentos';
+import Solicitacoes from '../pages/Solicitacoes';
 import NotFound from '../pages/NotFound';
-import ServiceRegister from '@/pages/ServiceRegister';
 
 const router = createBrowserRouter([
   {
@@ -42,10 +42,11 @@ const router = createBrowserRouter([
       { path: '/dashboard/servicos', element: <Services /> },
       { path: '/perfil', element: <Perfil /> },
       { path: '/meus-servicos', element: <MeusServicos /> },
-      { path: '/meus-servicos/novo', element: <NovoServico /> },
+      { path: '/meus-servicos/novo', element: <ServicoWizard /> },
       { path: '/meus-servicos/editar/:id', element: <EditarServico /> },
       { path: '/dashboard/carrinho', element: <Carrinho /> },
       { path: '/meus-agendamentos', element: <MeusAgendamentos /> },
+      { path: '/solicitacoes', element: <Solicitacoes /> },
     ],
   },
 ]);

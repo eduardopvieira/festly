@@ -29,7 +29,7 @@ public class CarrinhoController {
             @PathVariable Long servicoId,
             @Valid @RequestBody ItemCarrinhoRequest request
     ) {
-        return service.adicionarServico(usuarioId, servicoId, request.getInicio(), request.getFim());
+        return service.adicionarServico(usuarioId, servicoId, request.getInicio(), request.getFim(), request.getNumeroPessoas());
     }
 
     @DeleteMapping("/{usuarioId}/itens/{itemId}")

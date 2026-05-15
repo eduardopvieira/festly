@@ -41,18 +41,18 @@ export function CartProvider({ children }) {
     }
   }, [user?.id, fetchCart]);
 
-  const addItem = useCallback(async (servicoId, inicio, fim) => {
+  const addItem = useCallback(async (servicoId, inicio, fim, numeroPessoas) => {
     if (!user) return;
     if (!inicio || !fim) throw new Error('Início e fim são obrigatórios.');
-    await adicionarServico(user.id, servicoId, inicio, fim);
+    await adicionarServico(user.id, servicoId, inicio, fim, numeroPessoas);
     await fetchCart();
   }, [user?.id, fetchCart]);
 
   const addItems = useCallback(async (servicoId, slots) => {
     if (!user) return;
     if (!slots?.length) return;
-    for (const { inicio, fim } of slots) {
-      await adicionarServico(user.id, servicoId, inicio, fim);
+    for (const { inicio, fim, numeroPessoas } of slots) {
+      await adicionarServico(user.id, servicoId, inicio, fim, numeroPessoas);
     }
     await fetchCart();
   }, [user?.id, fetchCart]);

@@ -17,6 +17,7 @@ public class AgendamentoResponse {
     private LocalDateTime inicio;
     private LocalDateTime fim;
     private StatusAgendamento status;
+    private Integer numeroPessoas;
 
     public static AgendamentoResponse from(Agendamento agendamento) {
         AgendamentoResponse response = new AgendamentoResponse();
@@ -28,6 +29,7 @@ public class AgendamentoResponse {
         response.setInicio(agendamento.getInicio());
         response.setFim(agendamento.getFim());
         response.setStatus(agendamento.getStatus());
+        response.setNumeroPessoas(agendamento.getNumeroPessoas());
         return response;
     }
 }

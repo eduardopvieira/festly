@@ -44,7 +44,7 @@ const TIPOS_COBRANCA = [
   { value: 'POR_HORA', label: 'Por hora' },
 ];
 
-export default function ServicoForm({ defaultValues, onSubmit, isSubmitting, titulo }) {
+export default function ServicoForm({ defaultValues, onSubmit, isSubmitting, titulo, hideDisponivel }) {
   const {
     register,
     handleSubmit,
@@ -137,7 +137,7 @@ export default function ServicoForm({ defaultValues, onSubmit, isSubmitting, tit
       </div>
 
       {/* Disponível */}
-      <div className="flex items-center justify-between rounded-lg border p-4">
+      {!hideDisponivel && <div className="flex items-center justify-between rounded-lg border p-4">
         <div>
           <p className="text-sm font-medium">Disponível para contratação</p>
           <p className="text-xs text-muted-foreground">
@@ -151,7 +151,7 @@ export default function ServicoForm({ defaultValues, onSubmit, isSubmitting, tit
             <Switch checked={field.value} onCheckedChange={field.onChange} />
           )}
         />
-      </div>
+      </div>}
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Salvando...' : titulo}

@@ -31,4 +31,7 @@ public class ItemCarrinho {
 
     @Column(nullable = false)
     private LocalDateTime fim;
+
+    @Column(name = "numero_pessoas")
+    private Integer numeroPessoas;
 }

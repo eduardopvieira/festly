@@ -4,9 +4,9 @@ export function getCarrinho(usuarioId) {
   return api.get(`/carrinho/${usuarioId}`);
 }
 
-/** Adiciona um intervalo (inicio/fim em ISO local datetime) ao carrinho. */
-export function adicionarServico(usuarioId, servicoId, inicio, fim) {
-  return api.post(`/carrinho/${usuarioId}/servicos/${servicoId}`, { inicio, fim });
+/** Adiciona um intervalo ao carrinho. numeroPessoas é opcional (apenas POR_PESSOA). */
+export function adicionarServico(usuarioId, servicoId, inicio, fim, numeroPessoas) {
+  return api.post(`/carrinho/${usuarioId}/servicos/${servicoId}`, { inicio, fim, numeroPessoas });
 }
 
 export function removerItem(usuarioId, itemId) {

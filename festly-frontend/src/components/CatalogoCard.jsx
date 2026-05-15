@@ -1,22 +1,12 @@
 import { useState } from 'react';
-import { Loader2, Calendar as CalendarIcon, ShoppingCart } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
-import AgendadorIntervalos from './AgendadorIntervalos';
-import { fmtHoraISO } from '@/lib/utils';
+import SolicitarAgendamentoModal from './SolicitarAgendamentoModal';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -30,14 +20,9 @@ const COBRANCA_SUFFIX = {
 
 export default function CatalogoCard({ servico }) {
   const navigate = useNavigate();
-  const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
   const { user } = useAuth();
-  const { addItems, removeSlot } = useCart();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selecoes, setSelecoes] = useState([]);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [salvando, setSalvando] = useState(false);
+  const { addItem } = useCart();
+  const [modalOpen, setModalOpen] = useState(false);
 
   function abrirModal() {
     if (!user) {
@@ -45,59 +30,20 @@ export default function CatalogoCard({ servico }) {
       navigate('/login');
       return;
     }
-    setSelecoes([]);
-    setRefreshKey((k) => k + 1);
-    setIsModalOpen(true);
+    setModalOpen(true);
   }
 
-  const mostrarBotaoAgendar = true;
-
-  function adicionarSelecao(inicio, fim) {
-    setSelecoes((prev) => {
-      const sobrepoe = prev.some((s) => s.inicio < fim && s.fim > inicio);
-      if (sobrepoe) {
-        toast.error('Esse intervalo se sobrepõe a outro já selecionado.');
-        return prev;
-      }
-      return [...prev, { inicio, fim }];
-    });
-  }
-
-  function removerSelecao(idx) {
-    setSelecoes((prev) => prev.filter((_, i) => i !== idx));
-  }
-
-  async function removerMeu(intervalo) {
+  async function handleAdicionado({ inicio, fim, numeroPessoas }) {
     try {
-      await removeSlot(servico.id, fmtHoraISO(intervalo.inicio), fmtHoraISO(intervalo.fim));
-      toast.success('Removido do carrinho');
-      setRefreshKey((k) => k + 1);
+      await addItem(servico.id, inicio, fim, numeroPessoas);
+      toast.success('Adicionado ao carrinho!');
     } catch (err) {
-      toast.error(err.response?.data?.message ?? 'Erro ao remover do carrinho');
+      toast.error(err.response?.data?.erro ?? 'Erro ao adicionar ao carrinho.');
+      throw err;
     }
   }
 
-  async function handleAdicionarAoCarrinho() {
-    if (!selecoes.length || !user?.id || salvando) return;
-    setSalvando(true);
-    try {
-      await addItems(
-        servico.id,
-        selecoes.map((s) => ({
-          inicio: fmtHoraISO(s.inicio),
-          fim: fmtHoraISO(s.fim),
-        }))
-      );
-      toast.success(`${selecoes.length} horário(s) adicionado(s) ao carrinho!`);
-      setSelecoes([]);
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
-      toast.error(err.response?.data?.message ?? 'Erro ao adicionar ao carrinho.');
-      setRefreshKey((k) => k + 1);
-    } finally {
-      setSalvando(false);
-    }
-  }
+  const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
 
   return (
     <>
@@ -114,6 +60,9 @@ export default function CatalogoCard({ servico }) {
                 <p className="text-xs text-primary mt-0.5">
                   {CATEGORIA_LABEL[servico.categoria] ?? servico.categoria} · {servico.cidade}
                 </p>
+                {servico.nomePrestador && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{servico.nomePrestador}</p>
+                )}
               </div>
               <div className="text-right shrink-0">
                 <p className="font-bold text-sm">R$ {Number(servico.preco).toFixed(2).replace('.', ',')}</p>
@@ -123,59 +72,21 @@ export default function CatalogoCard({ servico }) {
 
             <div className="flex items-center justify-between gap-3 mt-4">
               <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
-
-              {mostrarBotaoAgendar && (
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="h-7 text-xs gap-1.5"
-                  onClick={abrirModal}
-                >
-                  <CalendarIcon className="h-3 w-3" />
-                  Agendar
-                </Button>
-              )}
+              <Button size="sm" variant="default" className="h-7 text-xs gap-1.5" onClick={abrirModal}>
+                <CalendarIcon className="h-3 w-3" />
+                Adicionar ao carrinho
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <AlertDialogContent
-          size="wide"
-          className="max-h-[min(92vh,800px)] gap-2 overflow-hidden p-3 sm:max-h-[min(90vh,760px)] sm:p-4 flex flex-col"
-        >
-          <AlertDialogHeader className="shrink-0 space-y-1 text-left">
-            <AlertDialogTitle className="text-base leading-tight">Agendar {servico.nome}</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs leading-snug">
-              Escolha uma data e o horário desejado. Você pode adicionar múltiplos intervalos.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-            <AgendadorIntervalos
-              servicoId={servico.id}
-              selecoes={selecoes}
-              onAdicionarSelecao={adicionarSelecao}
-              onRemoverSelecao={removerSelecao}
-              onRemoverMeu={removerMeu}
-              refreshKey={refreshKey}
-            />
-          </div>
-
-          <AlertDialogFooter className="shrink-0 sm:justify-end">
-            <AlertDialogCancel>Fechar</AlertDialogCancel>
-            <Button
-              onClick={handleAdicionarAoCarrinho}
-              disabled={!selecoes.length || salvando}
-              className="gap-2"
-            >
-              {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
-              Adicionar ao carrinho
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SolicitarAgendamentoModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        servico={servico}
+        onAdicionado={handleAdicionado}
+      />
     </>
   );
 }

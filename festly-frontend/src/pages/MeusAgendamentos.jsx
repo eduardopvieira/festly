@@ -20,6 +20,7 @@ import { listarAgendamentosCliente, cancelarAgendamento } from '../services/agen
 const STATUS_LABEL = {
   PENDENTE: 'Pendente',
   CONFIRMADO: 'Confirmado',
+  REJEITADO: 'Rejeitado',
   CANCELADO: 'Cancelado',
   CONCLUIDO: 'Concluído',
 };
@@ -27,6 +28,7 @@ const STATUS_LABEL = {
 const STATUS_CLASS = {
   PENDENTE: 'bg-yellow-100 text-yellow-800',
   CONFIRMADO: 'bg-green-100 text-green-800',
+  REJEITADO: 'bg-orange-100 text-orange-700',
   CANCELADO: 'bg-red-100 text-red-700',
   CONCLUIDO: 'bg-blue-100 text-blue-700',
 };
@@ -56,7 +58,7 @@ function fmtIntervalo(inicioISO, fimISO) {
 function AgendamentoCard({ agendamento, onCancelClick, isCanceling }) {
   const [from, to] = avatarGradient(agendamento.nomeServico);
   const initial = agendamento.nomeServico?.charAt(0).toUpperCase() ?? '?';
-  const canCancel = agendamento.status === 'PENDENTE' || agendamento.status === 'CONFIRMADO';
+  const canCancel = agendamento.status === 'PENDENTE';
 
   return (
     <div className="flex items-center gap-4 py-4">
@@ -141,7 +143,7 @@ export default function MeusAgendamentos() {
     (a) => a.status === 'PENDENTE' || a.status === 'CONFIRMADO',
   );
   const historico = agendamentos.filter(
-    (a) => a.status === 'CANCELADO' || a.status === 'CONCLUIDO',
+    (a) => a.status === 'CANCELADO' || a.status === 'CONCLUIDO' || a.status === 'REJEITADO',
   );
   const lista = activeTab === 'ativos' ? ativos : historico;
 

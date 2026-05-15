@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +39,8 @@ public class CarrinhoService {
             Long usuarioId,
             Long servicoId,
             LocalDateTime inicio,
-            LocalDateTime fim
+            LocalDateTime fim,
+            Integer numeroPessoas
     ) {
         AgendamentoService.validarIntervalo(inicio, fim);
 
@@ -49,7 +52,7 @@ public class CarrinhoService {
             throw new IllegalStateException("Este horário está fora da agenda do prestador.");
         }
 
-        if (agendamentoRepository.existsConflict(servicoId, inicio, fim, StatusAgendamento.CANCELADO)) {
+        if (agendamentoRepository.existsActiveConflict(servicoId, inicio, fim)) {
             throw new IllegalStateException("Este horário já foi reservado.");
         }
 
@@ -70,9 +73,12 @@ public class CarrinhoService {
                 .servico(servico)
                 .inicio(inicio)
                 .fim(fim)
+                .numeroPessoas(numeroPessoas)
                 .build();
 
         carrinho.getItens().add(novo);
+        colapsarItensContiguos(carrinho, servicoId);
+
         try {
             carrinhoRepository.saveAndFlush(carrinho);
         } catch (DataIntegrityViolationException ex) {
@@ -127,11 +133,10 @@ public class CarrinhoService {
         }
 
         for (ItemCarrinho item : carrinho.getItens()) {
-            if (agendamentoRepository.existsConflict(
+            if (agendamentoRepository.existsActiveConflict(
                     item.getServico().getId(),
                     item.getInicio(),
-                    item.getFim(),
-                    StatusAgendamento.CANCELADO
+                    item.getFim()
             )) {
                 throw new IllegalStateException(
                         "O serviço '" + item.getServico().getNome() +
@@ -146,7 +151,8 @@ public class CarrinhoService {
                     .cliente(carrinho.getUsuario())
                     .inicio(item.getInicio())
                     .fim(item.getFim())
-                    .status(StatusAgendamento.CONFIRMADO)
+                    .status(StatusAgendamento.PENDENTE)
+                    .numeroPessoas(item.getNumeroPessoas())
                     .build();
             try {
                 agendamentoRepository.saveAndFlush(novo);
@@ -159,6 +165,36 @@ public class CarrinhoService {
 
         carrinho.getItens().clear();
         carrinhoRepository.save(carrinho);
+    }
+
+    /**
+     * Mescla itens contíguos do mesmo serviço no carrinho em um único item.
+     * Útil quando o cliente adiciona slots consecutivos (ex: 10-11 + 11-12 → 10-12).
+     * Para POR_PESSOA, preserva o numeroPessoas do item mais cedo.
+     * Repete até não haver mais mesclagens possíveis (suporta encadeamento).
+     */
+    private void colapsarItensContiguos(Carrinho carrinho, Long servicoId) {
+        boolean houveMesclagem;
+        do {
+            houveMesclagem = false;
+
+            List<ItemCarrinho> itensDoServico = carrinho.getItens().stream()
+                    .filter(it -> it.getServico().getId().equals(servicoId))
+                    .sorted(Comparator.comparing(ItemCarrinho::getInicio))
+                    .toList();
+
+            for (int i = 0; i < itensDoServico.size() - 1; i++) {
+                ItemCarrinho anterior = itensDoServico.get(i);
+                ItemCarrinho posterior = itensDoServico.get(i + 1);
+
+                if (anterior.getFim().equals(posterior.getInicio())) {
+                    anterior.setFim(posterior.getFim());
+                    carrinho.getItens().remove(posterior);
+                    houveMesclagem = true;
+                    break;
+                }
+            }
+        } while (houveMesclagem);
     }
 
     private Carrinho buscarOuCriar(Long usuarioId) {

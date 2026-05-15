@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Search, Calendar } from 'lucide-react';
+import { ShoppingCart, Trash2, Search, Calendar, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -36,12 +36,29 @@ function fmtIntervalo(inicioISO, fimISO) {
   return `${data} ${hi} → ${dataFim} ${hf}`;
 }
 
+function fmtMoeda(valor) {
+  return `R$ ${Number(valor).toFixed(2).replace('.', ',')}`;
+}
+
+function legendaPreco(item) {
+  const { tipoCobranca, preco } = item.servico;
+  if (tipoCobranca === 'POR_HORA') {
+    const mins = (new Date(item.fim) - new Date(item.inicio)) / 60000;
+    const horas = (mins / 60).toFixed(1).replace('.', ',');
+    return `${fmtMoeda(preco)}/h × ${horas}h`;
+  }
+  if (tipoCobranca === 'POR_PESSOA' && item.numeroPessoas) {
+    return `${fmtMoeda(preco)}/pessoa × ${item.numeroPessoas}`;
+  }
+  return null;
+}
+
 function CartItem({ item, onRemove }) {
   const servico = item.servico;
-
   const [from, to] = avatarGradient(servico.nome);
   const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
-  const price = `R$ ${Number(servico.preco).toFixed(2).replace('.', ',')}`;
+  const price = fmtMoeda(item.precoCalculado ?? servico.preco);
+  const legenda = legendaPreco(item);
 
   return (
     <div className="flex items-center gap-4 py-4">
@@ -63,11 +80,17 @@ function CartItem({ item, onRemove }) {
         <p className="text-xs text-muted-foreground mt-0.5">
           {CATEGORIA_LABEL[servico.categoria] ?? servico.categoria}
           {servico.cidade && <> · {servico.cidade}</>}
+          {item.numeroPessoas && (
+            <span className="ml-1 inline-flex items-center gap-0.5">
+              · <Users className="h-3 w-3" /> {item.numeroPessoas} {item.numeroPessoas === 1 ? 'pessoa' : 'pessoas'}
+            </span>
+          )}
         </p>
       </div>
 
       <div className="text-right shrink-0 mr-2">
         <p className="font-bold text-sm">{price}</p>
+        {legenda && <p className="text-xs text-muted-foreground">{legenda}</p>}
       </div>
 
       <Button
@@ -86,7 +109,7 @@ function CartItem({ item, onRemove }) {
 export default function Carrinho() {
   const { items, total, loading, removeItem, clearCart, checkout } = useCart();
   const navigate = useNavigate();
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isSolicitando, setIsSolicitando] = useState(false);
 
   async function handleRemove(itemId) {
     try {
@@ -105,25 +128,21 @@ export default function Carrinho() {
     }
   }
 
-  async function handleCheckout() {
-    setIsCheckingOut(true);
+  async function handleSolicitar() {
+    setIsSolicitando(true);
     try {
       await checkout();
-      toast.success('Compra finalizada! Seus serviços foram agendados com sucesso.');
-      navigate('/dashboard/servicos'); 
+      toast.success('Solicitações enviadas! Aguarde a confirmação dos prestadores.');
+      navigate('/meus-agendamentos');
     } catch (err) {
-      const mensagem = err.response?.data?.erro || 'Erro ao processar o pagamento.';
+      const mensagem = err.response?.data?.erro || 'Erro ao enviar solicitações.';
       toast.error(mensagem, { duration: 6000 });
     } finally {
-      setIsCheckingOut(false);
+      setIsSolicitando(false);
     }
   }
 
-  function handleSolicitar() {
-    toast.info('Funcionalidade de solicitação de orçamentos em breve!');
-  }
-
-  const formattedTotal = `R$ ${Number(total).toFixed(2).replace('.', ',')}`;
+  const formattedTotal = fmtMoeda(total);
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8">
@@ -152,7 +171,7 @@ export default function Carrinho() {
           <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-20" />
           <p className="font-medium">Seu carrinho está vazio.</p>
           <p className="text-sm mt-1 mb-6">Explore o catálogo e adicione serviços.</p>
-          <Link to="/services">
+          <Link to="/dashboard/servicos">
             <Button size="sm" className="gap-2">
               <Search className="h-4 w-4" />
               Explorar serviços
@@ -182,14 +201,18 @@ export default function Carrinho() {
               </div>
             </div>
 
-            <Button 
-              className="w-full" 
-              size="lg" 
-              onClick={handleCheckout} 
-              disabled={isCheckingOut}
+            <p className="text-xs text-muted-foreground">
+              As solicitações ficam pendentes até o prestador confirmar.
+            </p>
+
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleSolicitar}
+              disabled={isSolicitando}
             >
-              {isCheckingOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Pagar e Agendar
+              {isSolicitando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Solicitar agendamentos
             </Button>
           </div>
         </Card>

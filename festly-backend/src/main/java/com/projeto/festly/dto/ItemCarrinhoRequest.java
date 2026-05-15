@@ -13,4 +13,6 @@ public class ItemCarrinhoRequest {
 
     @NotNull(message = "O fim é obrigatório")
     private LocalDateTime fim;
+
+    private Integer numeroPessoas;
 }
