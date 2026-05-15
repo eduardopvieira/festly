@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import CatalogoCard from '../components/CatalogoCard';
-import { listarServicosPublicos } from '../services/servicoService';
+import { listarServicos, listarServicosPublicos } from '../services/servicoService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CATEGORIAS = [
   { value: 'TODOS', label: 'Todos' },
@@ -19,8 +20,13 @@ const CATEGORIAS = [
 ];
 
 export default function Services() {
+  const { user } = useAuth();
+
   const [servicos, setServicos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
 
   const [searchInput, setSearchInput] = useState('');
@@ -29,32 +35,67 @@ export default function Services() {
   const [cidadeTerm, setCidadeTerm] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('TODOS');
 
+  const sentinelaRef = useRef(null);
+  const fetchFn = user ? listarServicos : listarServicosPublicos;
+
+  const carregarPagina = useCallback(async (pagina, substituir = false) => {
+    if (pagina === 0) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const { data } = await fetchFn({
+        nome: searchTerm,
+        cidade: cidadeTerm,
+        categoria: categoriaAtiva,
+        page: pagina,
+      });
+
+      setServicos((prev) => substituir ? data.content : [...prev, ...data.content]);
+      setHasMore(!data.last);
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [fetchFn, searchTerm, cidadeTerm, categoriaAtiva]);
+
+  // Reinicia sempre que os filtros mudam
   useEffect(() => {
-    setLoading(true);
+    setPage(0);
+    setServicos([]);
+    setHasMore(true);
+    carregarPagina(0, true);
+  }, [searchTerm, cidadeTerm, categoriaAtiva, user]);
 
-    const filtrosAtivos = {
-      nome: searchTerm,
-      cidade: cidadeTerm,
-      categoria: categoriaAtiva
-    };
+  // Carrega próxima página quando o sentinela fica visível
+  useEffect(() => {
+    if (!hasMore || loading) return;
 
-    listarServicosPublicos(filtrosAtivos)
-      .then(({ data }) => {
-        setServicos(data);
-        setError(false);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          setPage((p) => {
+            const next = p + 1;
+            carregarPagina(next);
+            return next;
+          });
+        }
+      },
+      { rootMargin: '200px' }
+    );
 
-  }, [searchTerm, cidadeTerm, categoriaAtiva]);
+    const el = sentinelaRef.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.unobserve(el); };
+  }, [hasMore, loading, loadingMore, carregarPagina]);
 
   function handleBuscar(e) {
     e.preventDefault();
     setSearchTerm(searchInput);
     setCidadeTerm(cidadeInput);
   }
-
-  const filtered = servicos;
 
   return (
     <div className="min-h-full">
@@ -80,7 +121,6 @@ export default function Services() {
             <Button type="submit">Buscar</Button>
           </form>
 
-          {/* Chips de categoria */}
           <div className="flex gap-2 flex-wrap">
             {CATEGORIAS.map(({ value, label }) => (
               <button
@@ -118,11 +158,7 @@ export default function Services() {
 
         {!loading && !error && (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
-              {filtered.length} {filtered.length === 1 ? 'serviço encontrado' : 'serviços encontrados'}
-            </p>
-
-            {filtered.length === 0 ? (
+            {servicos.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">
                 <Search className="h-10 w-10 mx-auto mb-3 opacity-20" />
                 <p className="font-medium">Nenhum serviço encontrado.</p>
@@ -130,10 +166,25 @@ export default function Services() {
               </div>
             ) : (
               <div className="space-y-3">
-                {filtered.map((s) => (
+                {servicos.map((s) => (
                   <CatalogoCard key={s.id} servico={s} />
                 ))}
               </div>
+            )}
+
+            {/* Sentinela de scroll infinito */}
+            {hasMore && (
+              <div ref={sentinelaRef} className="py-4 flex justify-center">
+                {loadingMore && (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                )}
+              </div>
+            )}
+
+            {!hasMore && servicos.length > 0 && (
+              <p className="text-center text-xs text-muted-foreground pt-6">
+                Todos os serviços foram carregados.
+              </p>
             )}
           </>
         )}

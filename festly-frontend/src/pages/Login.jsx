@@ -26,8 +26,9 @@ export default function Login() {
   async function onSubmit(values) {
     setFormError('');
     try {
-      await login(values.email, values.password);
-      navigate('/dashboard');
+      const data = await login(values.email, values.password);
+      const tipo = (data.tipoUsuario ?? data.tipo_usuario ?? '').toUpperCase();
+      navigate(tipo === 'CLIENTE' ? '/dashboard/servicos' : '/dashboard');
     } catch (err) {
       const status = err.response?.status;
       const mensagem = err.response?.data?.erro;

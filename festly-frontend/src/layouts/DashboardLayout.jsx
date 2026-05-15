@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, User, Globe, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays,
+  LayoutDashboard, Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,15 +15,15 @@ const PRESTADOR_ONLY_PATHS = ['/meus-servicos'];
 const PRESTADOR_NAV = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
   { icon: Briefcase,       label: 'Meus Serviços', to: '/meus-servicos' },
-  { icon: User,            label: 'Perfil', to: '/perfil' },
-  { icon: Globe,           label: 'Ver catálogo', to: '/dashboard/servicos' },
-];
-
-const CLIENTE_NAV = [
-  { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
   { icon: Search,          label: 'Explorar Serviços', to: '/dashboard/servicos' },
   { icon: CalendarDays,    label: 'Meus Agendamentos', to: '/meus-agendamentos' },
   { icon: User,            label: 'Perfil', to: '/perfil' },
+];
+
+const CLIENTE_NAV = [
+  { icon: Search,       label: 'Explorar Serviços', to: '/dashboard/servicos' },
+  { icon: CalendarDays, label: 'Meus Agendamentos', to: '/meus-agendamentos' },
+  { icon: User,         label: 'Perfil', to: '/perfil' },
 ];
 
 function SidebarNav({ navItems, collapsed, isActive, onItemClick }) {
@@ -76,7 +76,11 @@ export default function DashboardLayout() {
         location.pathname.startsWith(p)
       );
       if (isPrestadorRoute && user.tipoUsuario !== 'PRESTADOR') {
-        navigate('/dashboard');
+        navigate('/dashboard/servicos');
+        return;
+      }
+      if (/^\/dashboard\/?$/.test(location.pathname) && user.tipoUsuario === 'CLIENTE') {
+        navigate('/dashboard/servicos');
       }
     }
   }, [loading, user, location.pathname, navigate]);

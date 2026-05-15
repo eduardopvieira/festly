@@ -1,22 +1,20 @@
 import api from './api';
 
 export function listarServicos(filtros = {}) {
-  const params = {};
-  if (filtros.categoria) params.categoria = filtros.categoria;
-  if (filtros.precoMax) params.precoMax = filtros.precoMax;
-  if (filtros.disponivel !== undefined) params.disponivel = filtros.disponivel;
-  return api.get('/catalogo', { params });
-}
-
-export function listarServicosPublicos(filtros = {}) {
-  const params = {};
-  
+  const params = { page: filtros.page ?? 0, size: filtros.size ?? 12 };
   if (filtros.nome) params.nome = filtros.nome;
   if (filtros.cidade) params.cidade = filtros.cidade;
   if (filtros.categoria && filtros.categoria !== 'TODOS') params.categoria = filtros.categoria;
   if (filtros.precoMax) params.precoMax = filtros.precoMax;
-  if (filtros.disponivel !== undefined) params.disponivel = filtros.disponivel;
-  
+  return api.get('/catalogo', { params });
+}
+
+export function listarServicosPublicos(filtros = {}) {
+  const params = { page: filtros.page ?? 0, size: filtros.size ?? 12 };
+  if (filtros.nome) params.nome = filtros.nome;
+  if (filtros.cidade) params.cidade = filtros.cidade;
+  if (filtros.categoria && filtros.categoria !== 'TODOS') params.categoria = filtros.categoria;
+  if (filtros.precoMax) params.precoMax = filtros.precoMax;
   return api.get('/public/catalogo', { params });
 }
 

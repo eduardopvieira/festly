@@ -18,6 +18,7 @@ public class ServicoResponse {
     private CategoriaServico categoria;
     private boolean disponivel;
     private Long usuarioId;
+    private String nomePrestador;
     private String cidade;
     private TipoCobranca tipoCobranca;
     private List<ServicoFotoResponse> fotos;
@@ -31,6 +32,7 @@ public class ServicoResponse {
         response.setCategoria(servico.getCategoria());
         response.setDisponivel(servico.isDisponivel());
         response.setUsuarioId(servico.getUsuario().getId());
+        response.setNomePrestador(servico.getUsuario().getNome());
         response.setCidade(servico.getCidade());
         response.setTipoCobranca(servico.getTipoCobranca());
         response.setFotos(servico.getFotos().stream()

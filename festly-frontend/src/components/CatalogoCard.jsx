@@ -28,18 +28,6 @@ const COBRANCA_SUFFIX = {
   POR_EVENTO: '/evento', POR_PESSOA: '/pessoa', POR_HORA: '/hora',
 };
 
-/** API pode enviar camelCase, snake_case ou enum como objeto. */
-function tipoUsuarioNormalizado(user) {
-  if (!user) return null;
-  const raw = user.tipoUsuario ?? user.tipo_usuario;
-  if (raw == null) return null;
-  if (typeof raw === 'string') return raw.toUpperCase();
-  if (typeof raw === 'object' && raw !== null && 'name' in raw) {
-    return String(raw.name).toUpperCase();
-  }
-  return String(raw).toUpperCase();
-}
-
 export default function CatalogoCard({ servico }) {
   const navigate = useNavigate();
   const initial = servico.nome?.charAt(0).toUpperCase() ?? '?';
@@ -52,18 +40,9 @@ export default function CatalogoCard({ servico }) {
   const [salvando, setSalvando] = useState(false);
 
   function abrirModal() {
-    const tipo = tipoUsuarioNormalizado(user);
     if (!user) {
       toast.info('Faça login para agendar um serviço.');
       navigate('/login');
-      return;
-    }
-    if (tipo === 'PRESTADOR') {
-      toast.info('Prestadores não agendam pelo catálogo. Use o painel dos seus serviços.');
-      return;
-    }
-    if (tipo !== 'CLIENTE') {
-      toast.error('Não foi possível identificar o tipo da sua conta. Entre novamente.');
       return;
     }
     setSelecoes([]);
@@ -71,7 +50,7 @@ export default function CatalogoCard({ servico }) {
     setIsModalOpen(true);
   }
 
-  const mostrarBotaoAgendar = tipoUsuarioNormalizado(user) !== 'PRESTADOR';
+  const mostrarBotaoAgendar = true;
 
   function adicionarSelecao(inicio, fim) {
     setSelecoes((prev) => {

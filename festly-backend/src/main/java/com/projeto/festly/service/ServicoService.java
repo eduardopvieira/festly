@@ -9,6 +9,9 @@ import com.projeto.festly.repository.ServicoRepository;
 import com.projeto.festly.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,47 +39,35 @@ public class ServicoService {
                 .usuario(usuario)
                 .build();
 
-        servico.setCidade(request.getCidade());
-        servico.setTipoCobranca(request.getTipoCobranca());
-        servico.setImagemCapa(request.getImagemCapa());
-
         return ServicoResponse.from(repository.save(servico));
     }
 
-    public List<ServicoResponse> listar(String nome, CategoriaServico categoria, String cidade, BigDecimal precoMax) {
-        List<Servico> servicos;
+    public Page<ServicoResponse> listar(String nome, CategoriaServico categoria, String cidade,
+                                        BigDecimal precoMax, Long excludeUsuarioId, Pageable pageable) {
+        Specification<Servico> spec = (root, query, cb) -> cb.conjunction();
 
         if (nome != null && !nome.isBlank()) {
-            servicos = repository.findByNomeContainingIgnoreCase(nome);
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.<String>get("nome")), "%" + nome.toLowerCase() + "%"));
+        }
+        if (categoria != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("categoria"), categoria));
+        }
+        if (cidade != null && !cidade.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(cb.lower(root.<String>get("cidade")), cidade.toLowerCase()));
+        }
+        if (precoMax != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.<BigDecimal>get("preco"), precoMax));
+        }
+        if (excludeUsuarioId != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.notEqual(root.get("usuario").get("id"), excludeUsuarioId));
         }
 
-        else if (categoria != null && precoMax != null) {
-            servicos = repository.findByCategoriaAndPrecoLessThanEqual(categoria, precoMax);
-        }
-
-        else if (categoria != null && cidade != null && !cidade.isBlank()) {
-            servicos = repository.findByCategoriaAndCidadeIgnoreCase(categoria, cidade);
-        }
-
-        else if (precoMax != null) {
-            servicos = repository.findByPrecoLessThanEqual(precoMax);
-        }
-
-        else if (cidade != null && !cidade.isBlank()) {
-            servicos = repository.findByCidadeIgnoreCase(cidade);
-        }
-
-        else if (categoria != null) {
-            servicos = repository.findByCategoria(categoria);
-        }
-
-        else {
-            servicos = repository.findAll();
-        }
-
-        return servicos.stream()
-                .map(ServicoResponse::from)
-                .toList();
+        return repository.findAll(spec, pageable).map(ServicoResponse::from);
     }
 
     public ServicoResponse buscarPorId(Long id) {

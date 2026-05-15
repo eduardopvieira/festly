@@ -24,9 +24,10 @@ export default function VerifyEmail() {
 
   async function onSubmit(values) {
     try {
-      await verify(email, values.codigo);
+      const data = await verify(email, values.codigo);
       toast.success('Email verificado com sucesso!');
-      navigate('/dashboard');
+      const tipo = (data.tipoUsuario ?? data.tipo_usuario ?? '').toUpperCase();
+      navigate(tipo === 'CLIENTE' ? '/dashboard/servicos' : '/dashboard');
     } catch (err) {
       const mensagem = err.response?.data?.erro || 'Código inválido ou expirado';
       toast.error(mensagem);
