@@ -1,6 +1,7 @@
 package com.projeto.festly.auth;
 
 import com.projeto.festly.dto.*;
+import com.projeto.festly.entity.TipoUsuario;
 import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class AuthService {
                 .senha(passwordEncoder.encode(request.getSenha()))
                 .cpf(temCpf ? request.getCpf().replaceAll("\\D", "") : null)
                 .cnpj(temCnpj ? request.getCnpj().replaceAll("\\D", "") : null)
-                .tipoUsuario(request.getTipoUsuario())
+                .tipoUsuario(TipoUsuario.USUARIO)
                 .verificado(false)
                 .codigoVerificacao(codigo)
                 .codigoExpiracao(LocalDateTime.now().plusMinutes(15))

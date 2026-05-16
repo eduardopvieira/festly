@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays, ClipboardList,
+  Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays, ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,21 +10,12 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 
-const PRESTADOR_ONLY_PATHS = ['/meus-servicos', '/solicitacoes'];
-
-const PRESTADOR_NAV = [
-  { icon: LayoutDashboard, label: 'Dashboard',          to: '/dashboard' },
-  { icon: Briefcase,       label: 'Meus Serviços',      to: '/meus-servicos' },
-  { icon: ClipboardList,   label: 'Solicitações',       to: '/solicitacoes' },
-  { icon: Search,          label: 'Explorar Serviços',  to: '/dashboard/servicos' },
-  { icon: CalendarDays,    label: 'Meus Agendamentos',  to: '/meus-agendamentos' },
-  { icon: User,            label: 'Perfil',             to: '/perfil' },
-];
-
-const CLIENTE_NAV = [
-  { icon: Search,       label: 'Explorar Serviços', to: '/dashboard/servicos' },
-  { icon: CalendarDays, label: 'Meus Agendamentos', to: '/meus-agendamentos' },
-  { icon: User,         label: 'Perfil', to: '/perfil' },
+const NAV = [
+  { icon: Search,       label: 'Explorar Serviços',  to: '/dashboard/servicos' },
+  { icon: Briefcase,    label: 'Meus Serviços',      to: '/meus-servicos' },
+  { icon: ClipboardList, label: 'Solicitações',      to: '/solicitacoes' },
+  { icon: CalendarDays, label: 'Meus Agendamentos',  to: '/meus-agendamentos' },
+  { icon: User,         label: 'Perfil',             to: '/perfil' },
 ];
 
 function SidebarNav({ navItems, collapsed, isActive, onItemClick }) {
@@ -72,17 +63,8 @@ export default function DashboardLayout() {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (!loading && user) {
-      const isPrestadorRoute = PRESTADOR_ONLY_PATHS.some((p) =>
-        location.pathname.startsWith(p)
-      );
-      if (isPrestadorRoute && user.tipoUsuario !== 'PRESTADOR') {
-        navigate('/dashboard/servicos');
-        return;
-      }
-      if (/^\/dashboard\/?$/.test(location.pathname) && user.tipoUsuario === 'CLIENTE') {
-        navigate('/dashboard/servicos');
-      }
+    if (!loading && user && /^\/dashboard\/?$/.test(location.pathname)) {
+      navigate('/dashboard/servicos');
     }
   }, [loading, user, location.pathname, navigate]);
 
@@ -94,7 +76,7 @@ export default function DashboardLayout() {
     );
   }
 
-  const navItems = user.tipoUsuario === 'PRESTADOR' ? PRESTADOR_NAV : CLIENTE_NAV;
+  const navItems = NAV;
 
   const isActive = (to) =>
     to === '/dashboard'

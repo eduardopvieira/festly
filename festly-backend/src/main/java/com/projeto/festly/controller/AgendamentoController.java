@@ -22,33 +22,34 @@ public class AgendamentoController {
     private final AgendamentoService service;
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AgendamentoResponse> agendar(@RequestBody @Valid AgendamentoRequest request) {
         AgendamentoResponse response = service.agendar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/cliente/{clienteId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AgendamentoResponse>> listarDoCliente(@PathVariable Long clienteId) {
         return ResponseEntity.ok(service.listarDoCliente(clienteId));
     }
 
     @PostMapping("/{agendamentoId}/cancelar")
-    @PreAuthorize("hasRole('CLIENTE')")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancelar(@PathVariable Long agendamentoId, @RequestParam Long clienteId) {
         service.cancelar(agendamentoId, clienteId);
     }
 
     @GetMapping("/prestador")
-    @PreAuthorize("hasRole('PRESTADOR')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AgendamentoResponse>> listarDoPrestador(
             @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(service.listarDoPrestador(usuario.getId()));
     }
 
     @PostMapping("/{id}/confirmar")
-    @PreAuthorize("hasRole('PRESTADOR')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AgendamentoResponse> confirmar(
             @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {
@@ -56,7 +57,7 @@ public class AgendamentoController {
     }
 
     @PostMapping("/{id}/rejeitar")
-    @PreAuthorize("hasRole('PRESTADOR')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AgendamentoResponse> rejeitar(
             @PathVariable Long id,
             @AuthenticationPrincipal Usuario usuario) {

@@ -32,7 +32,7 @@ public class DataSeeder implements CommandLineRunner {
                 .email("prestador1@gmail.com")
                 .senha(senha)
                 .cnpj("00000000000101")
-                .tipoUsuario(TipoUsuario.PRESTADOR)
+                .tipoUsuario(TipoUsuario.USUARIO)
                 .verificado(true)
                 .build());
 
@@ -41,7 +41,7 @@ public class DataSeeder implements CommandLineRunner {
                 .email("prestador2@gmail.com")
                 .senha(senha)
                 .cnpj("00000000000102")
-                .tipoUsuario(TipoUsuario.PRESTADOR)
+                .tipoUsuario(TipoUsuario.USUARIO)
                 .verificado(true)
                 .build());
 
@@ -50,7 +50,7 @@ public class DataSeeder implements CommandLineRunner {
                 .email("cliente1@gmail.com")
                 .senha(senha)
                 .cpf("00000000001")
-                .tipoUsuario(TipoUsuario.CLIENTE)
+                .tipoUsuario(TipoUsuario.USUARIO)
                 .verificado(true)
                 .build());
 
@@ -59,7 +59,7 @@ public class DataSeeder implements CommandLineRunner {
                 .email("cliente2@gmail.com")
                 .senha(senha)
                 .cpf("00000000002")
-                .tipoUsuario(TipoUsuario.CLIENTE)
+                .tipoUsuario(TipoUsuario.USUARIO)
                 .verificado(true)
                 .build());
 

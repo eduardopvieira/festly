@@ -1,5 +1,5 @@
 package com.projeto.festly.entity;
 
 public enum TipoUsuario {
-    CLIENTE, PRESTADOR
+    CLIENTE, PRESTADOR, USUARIO
 }
