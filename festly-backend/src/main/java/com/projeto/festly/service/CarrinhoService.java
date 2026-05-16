@@ -1,6 +1,7 @@
 package com.projeto.festly.service;
 
 import com.projeto.festly.dto.CarrinhoResponse;
+import com.projeto.festly.dto.ItemCarrinhoRequest;
 import com.projeto.festly.entity.*;
 import com.projeto.festly.repository.AgendamentoRepository;
 import com.projeto.festly.repository.CarrinhoRepository;
@@ -38,10 +39,11 @@ public class CarrinhoService {
     public CarrinhoResponse adicionarServico(
             Long usuarioId,
             Long servicoId,
-            LocalDateTime inicio,
-            LocalDateTime fim,
-            Integer numeroPessoas
+            ItemCarrinhoRequest request
     ) {
+        LocalDateTime inicio = request.getInicio();
+        LocalDateTime fim = request.getFim();
+
         AgendamentoService.validarIntervalo(inicio, fim);
 
         Carrinho carrinho = buscarOuCriar(usuarioId);
@@ -73,7 +75,16 @@ public class CarrinhoService {
                 .servico(servico)
                 .inicio(inicio)
                 .fim(fim)
-                .numeroPessoas(numeroPessoas)
+                .numeroPessoas(request.getNumeroPessoas())
+                .rua(request.getRua())
+                .numero(request.getNumero())
+                .bairro(request.getBairro())
+                .cidade(request.getCidade())
+                .estado(request.getEstado())
+                .cep(request.getCep())
+                .complemento(request.getComplemento())
+                .tipoEvento(request.getTipoEvento())
+                .observacoes(request.getObservacoes())
                 .build();
 
         carrinho.getItens().add(novo);
@@ -153,6 +164,15 @@ public class CarrinhoService {
                     .fim(item.getFim())
                     .status(StatusAgendamento.PENDENTE)
                     .numeroPessoas(item.getNumeroPessoas())
+                    .rua(item.getRua())
+                    .numero(item.getNumero())
+                    .bairro(item.getBairro())
+                    .cidade(item.getCidade())
+                    .estado(item.getEstado())
+                    .cep(item.getCep())
+                    .complemento(item.getComplemento())
+                    .tipoEvento(item.getTipoEvento())
+                    .observacoes(item.getObservacoes())
                     .build();
             try {
                 agendamentoRepository.saveAndFlush(novo);

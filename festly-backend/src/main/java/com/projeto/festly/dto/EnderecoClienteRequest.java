@@ -1,22 +1,11 @@
 package com.projeto.festly.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
-public class ItemCarrinhoRequest {
-
-    @NotNull(message = "O início é obrigatório")
-    private LocalDateTime inicio;
-
-    @NotNull(message = "O fim é obrigatório")
-    private LocalDateTime fim;
-
-    private Integer numeroPessoas;
+public class EnderecoClienteRequest {
 
     @NotBlank(message = "Rua é obrigatória")
     private String rua;
@@ -44,9 +33,6 @@ public class ItemCarrinhoRequest {
     @Size(max = 100)
     private String complemento;
 
-    @Size(max = 100)
-    private String tipoEvento;
-
-    @Size(max = 2000)
-    private String observacoes;
+    @Size(max = 50)
+    private String apelido;
 }

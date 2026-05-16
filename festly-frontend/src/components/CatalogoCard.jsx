@@ -33,9 +33,9 @@ export default function CatalogoCard({ servico }) {
     setModalOpen(true);
   }
 
-  async function handleAdicionado({ inicio, fim, numeroPessoas }) {
+  async function handleAdicionado(payload) {
     try {
-      await addItem(servico.id, inicio, fim, numeroPessoas);
+      await addItem(servico.id, payload);
       toast.success('Adicionado ao carrinho!');
     } catch (err) {
       toast.error(err.response?.data?.erro ?? 'Erro ao adicionar ao carrinho.');

@@ -173,9 +173,10 @@ public class DisponibilidadeService {
         LocalDateTime agora = LocalDateTime.now();
         List<Reserva> agenda = subtrairAntesDe(bruto, agora);
 
-        // 3) Recortar pela janela [inicioReal, fimReal+1d) para nao sair do range pedido
+        // 3) Recortar pela janela [inicioReal, fimReal+2d) para preservar intervalos pernoite
+        //    que iniciam no último dia solicitado e terminam no dia seguinte (ex: 19h→19h).
         LocalDateTime cortaInicio = inicioReal.atStartOfDay();
-        LocalDateTime cortaFim = fimReal.plusDays(1).atStartOfDay();
+        LocalDateTime cortaFim = fimReal.plusDays(2).atStartOfDay();
         agenda = recortar(agenda, cortaInicio, cortaFim);
 
         // 4) Computar partes "MEU" (interseção entre agenda e reservasMeu)
@@ -186,12 +187,32 @@ public class DisponibilidadeService {
         // partesReservadasOutros - partesMeu para evitar duplicidade visual
         List<Reserva> livres = subtrair(agenda, mesclar(reservadosTotal));
 
+        // 5) Surfacing de residuais pernoite: caudas de reservas cross-day que terminam
+        //    dentro do range pedido ficam "órfãs" do schedule regular do dia seguinte.
+        //    Adicioná-las a livres garante que o cliente veja o horário no dia correto.
+        List<Reserva> todasReservas = new ArrayList<>(reservasOutros);
+        todasReservas.addAll(reservasMeu);
+        List<Reserva> residuais = computarResiduaisPernoite(regras, todasReservas, inicioReal, fimReal);
+        if (!residuais.isEmpty()) {
+            List<Reserva> residuaisLivres = subtrair(residuais, mesclar(todasReservas));
+            List<Reserva> livresMaisResiduais = new ArrayList<>(livres);
+            livresMaisResiduais.addAll(residuaisLivres);
+            livres = mesclar(livresMaisResiduais);
+        }
+
         List<IntervaloAgendaResponse> resultado = new ArrayList<>();
         livres.forEach(r -> resultado.add(new IntervaloAgendaResponse(r.inicio, r.fim, BlocoStatus.DISPONIVEL)));
         partesMeu.forEach(r -> resultado.add(new IntervaloAgendaResponse(r.inicio, r.fim, BlocoStatus.MEU)));
         // outros - meu (caso uma reserva de outro caia exatamente onde também cair "meu")
         subtrair(partesReservadasOutros, partesMeu)
                 .forEach(r -> resultado.add(new IntervaloAgendaResponse(r.inicio, r.fim, BlocoStatus.RESERVADO)));
+
+        // 6) Ancoragem por data de início: só retornar intervalos cujo início cai dentro
+        //    do range pedido. Impede que residuais gerados após meia-noite apareçam na
+        //    consulta do dia anterior.
+        LocalDateTime anchoraFim = fimReal.plusDays(1).atStartOfDay();
+        resultado.removeIf(r ->
+                r.getInicio().isBefore(cortaInicio) || !r.getInicio().isBefore(anchoraFim));
 
         resultado.sort(Comparator
                 .comparing(IntervaloAgendaResponse::getInicio)
@@ -413,6 +434,47 @@ public class DisponibilidadeService {
         List<Reserva> uniao = new ArrayList<>(a);
         uniao.addAll(b);
         return mesclar(uniao);
+    }
+
+    // ---------------------------------------------------------------------
+    // Residuais de pernoite
+    // ---------------------------------------------------------------------
+
+    /**
+     * Para cada dia D em [inicioReal, fimReal], localiza reservas que começaram no
+     * Dia D-1 e terminam no Dia D (reservas cross-day). Para cada uma delas encontra
+     * a janela overnight do Dia D-1 que a contém e devolve a cauda livre
+     * (reserva.fim → janela.fim). Essas caudas representam tempo genuinamente
+     * disponível que o schedule regular do Dia D não cobre sozinho.
+     */
+    private List<Reserva> computarResiduaisPernoite(
+            List<RegraDisponibilidade> regras,
+            List<Reserva> todasReservas,
+            LocalDate inicioReal,
+            LocalDate fimReal
+    ) {
+        List<Reserva> caudas = new ArrayList<>();
+        for (LocalDate d = inicioReal; !d.isAfter(fimReal); d = d.plusDays(1)) {
+            LocalDate prevDay = d.minusDays(1);
+            for (Reserva reserva : todasReservas) {
+                if (!reserva.inicio().toLocalDate().equals(prevDay)) continue;
+                if (!reserva.fim().toLocalDate().equals(d)) continue;
+                for (RegraDisponibilidade regra : regras) {
+                    if (!regra.isAtiva()) continue;
+                    if (!diaDentroDoRange(prevDay.getDayOfWeek(), regra.getDiaInicio(), regra.getDiaFim())) continue;
+                    for (IntervaloHorario it : regra.getIntervalos()) {
+                        if (!it.atravessaMeiaNoite()) continue;
+                        LocalDateTime windowStart = LocalDateTime.of(prevDay, it.getHoraInicio());
+                        LocalDateTime windowEnd   = LocalDateTime.of(d, it.getHoraFim());
+                        if (reserva.inicio().isBefore(windowStart) || reserva.fim().isAfter(windowEnd)) continue;
+                        if (reserva.fim().isBefore(windowEnd)) {
+                            caudas.add(new Reserva(reserva.fim(), windowEnd));
+                        }
+                    }
+                }
+            }
+        }
+        return caudas.isEmpty() ? List.of() : mesclar(caudas);
     }
 
     // ---------------------------------------------------------------------

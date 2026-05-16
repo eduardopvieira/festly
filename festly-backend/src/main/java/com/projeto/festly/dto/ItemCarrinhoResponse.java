@@ -18,6 +18,15 @@ public class ItemCarrinhoResponse {
     private LocalDateTime fim;
     private Integer numeroPessoas;
     private BigDecimal precoCalculado;
+    private String rua;
+    private String numero;
+    private String bairro;
+    private String cidade;
+    private String estado;
+    private String cep;
+    private String complemento;
+    private String tipoEvento;
+    private String observacoes;
 
     public static ItemCarrinhoResponse from(ItemCarrinho item) {
         ItemCarrinhoResponse response = new ItemCarrinhoResponse();
@@ -27,6 +36,15 @@ public class ItemCarrinhoResponse {
         response.setFim(item.getFim());
         response.setNumeroPessoas(item.getNumeroPessoas());
         response.setPrecoCalculado(calcularPreco(item));
+        response.setRua(item.getRua());
+        response.setNumero(item.getNumero());
+        response.setBairro(item.getBairro());
+        response.setCidade(item.getCidade());
+        response.setEstado(item.getEstado());
+        response.setCep(item.getCep());
+        response.setComplemento(item.getComplemento());
+        response.setTipoEvento(item.getTipoEvento());
+        response.setObservacoes(item.getObservacoes());
         return response;
     }
 

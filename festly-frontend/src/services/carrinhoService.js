@@ -4,9 +4,9 @@ export function getCarrinho(usuarioId) {
   return api.get(`/carrinho/${usuarioId}`);
 }
 
-/** Adiciona um intervalo ao carrinho. numeroPessoas é opcional (apenas POR_PESSOA). */
-export function adicionarServico(usuarioId, servicoId, inicio, fim, numeroPessoas) {
-  return api.post(`/carrinho/${usuarioId}/servicos/${servicoId}`, { inicio, fim, numeroPessoas });
+/** Adiciona um intervalo ao carrinho. Payload inclui horários, endereço do evento e dados adicionais. */
+export function adicionarServico(usuarioId, servicoId, payload) {
+  return api.post(`/carrinho/${usuarioId}/servicos/${servicoId}`, payload);
 }
 
 export function removerItem(usuarioId, itemId) {

@@ -18,6 +18,15 @@ public class AgendamentoResponse {
     private LocalDateTime fim;
     private StatusAgendamento status;
     private Integer numeroPessoas;
+    private String rua;
+    private String numero;
+    private String bairro;
+    private String cidade;
+    private String estado;
+    private String cep;
+    private String complemento;
+    private String tipoEvento;
+    private String observacoes;
 
     public static AgendamentoResponse from(Agendamento agendamento) {
         AgendamentoResponse response = new AgendamentoResponse();
@@ -30,6 +39,15 @@ public class AgendamentoResponse {
         response.setFim(agendamento.getFim());
         response.setStatus(agendamento.getStatus());
         response.setNumeroPessoas(agendamento.getNumeroPessoas());
+        response.setRua(agendamento.getRua());
+        response.setNumero(agendamento.getNumero());
+        response.setBairro(agendamento.getBairro());
+        response.setCidade(agendamento.getCidade());
+        response.setEstado(agendamento.getEstado());
+        response.setCep(agendamento.getCep());
+        response.setComplemento(agendamento.getComplemento());
+        response.setTipoEvento(agendamento.getTipoEvento());
+        response.setObservacoes(agendamento.getObservacoes());
         return response;
     }
 }
