@@ -1,38 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { CalendarDays, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { listarAgendamentosCliente, cancelarAgendamento } from '../services/agendamentoService';
 
 const STATUS_LABEL = {
-  PENDENTE: 'Pendente',
-  CONFIRMADO: 'Confirmado',
-  REJEITADO: 'Rejeitado',
-  CANCELADO: 'Cancelado',
-  CONCLUIDO: 'Concluído',
+  PENDENTE: 'Pendente', CONFIRMADO: 'Confirmado',
+  REJEITADO: 'Rejeitado', CANCELADO: 'Cancelado', CONCLUIDO: 'Concluído',
 };
-
 const STATUS_CLASS = {
-  PENDENTE: 'bg-yellow-100 text-yellow-800',
-  CONFIRMADO: 'bg-green-100 text-green-800',
-  REJEITADO: 'bg-orange-100 text-orange-700',
-  CANCELADO: 'bg-red-100 text-red-700',
-  CONCLUIDO: 'bg-blue-100 text-blue-700',
+  PENDENTE:   'bg-yellow-100 text-yellow-800',
+  CONFIRMADO: 'bg-green-100  text-green-800',
+  REJEITADO:  'bg-orange-100 text-orange-700',
+  CANCELADO:  'bg-red-100    text-red-700',
+  CONCLUIDO:  'bg-blue-100   text-blue-700',
 };
-
 const AVATAR_GRADIENTS = [
   ['#7c3aed', '#a78bfa'], ['#0284c7', '#38bdf8'], ['#d97706', '#fb923c'],
   ['#059669', '#34d399'], ['#e11d48', '#fb7185'], ['#4338ca', '#818cf8'],
@@ -77,16 +67,13 @@ function AgendamentoCard({ agendamento, onCancelClick, isCanceling }) {
         </p>
       </div>
 
-      <span
-        className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_CLASS[agendamento.status]}`}
-      >
+      <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_CLASS[agendamento.status]}`}>
         {STATUS_LABEL[agendamento.status]}
       </span>
 
       {canCancel && (
         <Button
-          variant="ghost"
-          size="sm"
+          variant="ghost" size="sm"
           onClick={() => onCancelClick(agendamento)}
           disabled={isCanceling}
           className="text-muted-foreground hover:text-destructive shrink-0 text-xs"
@@ -98,28 +85,74 @@ function AgendamentoCard({ agendamento, onCancelClick, isCanceling }) {
   );
 }
 
+const TAB_INITIAL = { list: [], page: -1, hasMore: true };
+
 export default function MeusAgendamentos() {
   const { user } = useAuth();
-  const [agendamentos, setAgendamentos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('ativos');
-  const [cancelTarget, setCancelTarget] = useState(null);
-  const [cancelingId, setCancelingId] = useState(null);
 
-  async function fetchAgendamentos() {
+  const [activeTab, setActiveTab] = useState('ativos');
+  const [tabState, setTabState] = useState({
+    ativos:   { ...TAB_INITIAL },
+    historico: { ...TAB_INITIAL },
+  });
+  const [loading, setLoading]         = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [cancelTarget, setCancelTarget]   = useState(null);
+  const [cancelingId, setCancelingId]     = useState(null);
+  const sentinelaRef = useRef(null);
+
+  const current = tabState[activeTab];
+  const currentPage = current.page;
+
+  const carregarPagina = useCallback(async (tab, pagina) => {
+    if (pagina === 0) setLoading(true);
+    else setLoadingMore(true);
     try {
-      const { data } = await listarAgendamentosCliente(user.id);
-      setAgendamentos(data);
+      const { data } = await listarAgendamentosCliente(user.id, {
+        ativo: tab === 'ativos',
+        page: pagina,
+        size: 10,
+      });
+      setTabState((prev) => ({
+        ...prev,
+        [tab]: {
+          list: pagina === 0 ? data.content : [...prev[tab].list, ...data.content],
+          page: pagina,
+          hasMore: !data.last,
+        },
+      }));
     } catch {
       toast.error('Erro ao carregar agendamentos.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }
+  }, [user.id]);
 
+  // Carrega a tab quando não foi carregada ainda
   useEffect(() => {
-    fetchAgendamentos();
-  }, []);
+    if (currentPage === -1) carregarPagina(activeTab, 0);
+  }, [activeTab, currentPage, carregarPagina]);
+
+  // Scroll infinito
+  useEffect(() => {
+    if (!current.hasMore || loading || loadingMore || currentPage === -1) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && current.hasMore && !loadingMore) {
+          carregarPagina(activeTab, currentPage + 1);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    const el = sentinelaRef.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.unobserve(el); };
+  }, [activeTab, current.hasMore, currentPage, loading, loadingMore, carregarPagina]);
+
+  function recarregarTudo() {
+    setTabState({ ativos: { ...TAB_INITIAL }, historico: { ...TAB_INITIAL } });
+  }
 
   async function handleConfirmCancel() {
     if (!cancelTarget) return;
@@ -129,28 +162,15 @@ export default function MeusAgendamentos() {
     try {
       await cancelarAgendamento(target.id, user.id);
       toast.success('Agendamento cancelado.');
-      setLoading(true);
-      await fetchAgendamentos();
+      recarregarTudo();
     } catch (err) {
-      const msg = err.response?.data?.erro || 'Erro ao cancelar agendamento.';
-      toast.error(msg);
+      toast.error(err.response?.data?.erro || 'Erro ao cancelar agendamento.');
     } finally {
       setCancelingId(null);
     }
   }
 
-  const ativos = agendamentos.filter(
-    (a) => a.status === 'PENDENTE' || a.status === 'CONFIRMADO',
-  );
-  const historico = agendamentos.filter(
-    (a) => a.status === 'CANCELADO' || a.status === 'CONCLUIDO' || a.status === 'REJEITADO',
-  );
-  const lista = activeTab === 'ativos' ? ativos : historico;
-
-  const tabs = [
-    { key: 'ativos', label: 'Ativos', count: ativos.length },
-    { key: 'historico', label: 'Histórico', count: null },
-  ];
+  const ativosCount = tabState.ativos.list.length;
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8">
@@ -159,8 +179,12 @@ export default function MeusAgendamentos() {
         Meus Agendamentos
       </h1>
 
+      {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b">
-        {tabs.map(({ key, label, count }) => (
+        {[
+          { key: 'ativos', label: 'Ativos' },
+          { key: 'historico', label: 'Histórico' },
+        ].map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
@@ -172,24 +196,26 @@ export default function MeusAgendamentos() {
             ].join(' ')}
           >
             {label}
-            {count !== null && count > 0 && (
+            {key === 'ativos' && ativosCount > 0 && (
               <span className="ml-1.5 text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5">
-                {count}
+                {ativosCount}
               </span>
             )}
           </button>
         ))}
       </div>
 
+      {/* Skeletons */}
       {loading && (
         <div className="space-y-3">
-          {[1, 2].map((i) => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />
           ))}
         </div>
       )}
 
-      {!loading && lista.length === 0 && (
+      {/* Estado vazio */}
+      {!loading && current.list.length === 0 && currentPage >= 0 && (
         <div className="text-center py-20 text-muted-foreground">
           <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-20" />
           {activeTab === 'ativos' ? (
@@ -209,10 +235,11 @@ export default function MeusAgendamentos() {
         </div>
       )}
 
-      {!loading && lista.length > 0 && (
+      {/* Lista */}
+      {!loading && current.list.length > 0 && (
         <Card>
           <CardContent className="p-4 divide-y divide-border">
-            {lista.map((ag) => (
+            {current.list.map((ag) => (
               <AgendamentoCard
                 key={ag.id}
                 agendamento={ag}
@@ -224,6 +251,22 @@ export default function MeusAgendamentos() {
         </Card>
       )}
 
+      {/* Sentinela */}
+      {!loading && current.hasMore && (
+        <div ref={sentinelaRef} className="py-4 flex justify-center">
+          {loadingMore && (
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          )}
+        </div>
+      )}
+
+      {!loading && !current.hasMore && current.list.length > 0 && (
+        <p className="text-center text-xs text-muted-foreground pt-6">
+          Todos os agendamentos foram carregados.
+        </p>
+      )}
+
+      {/* Dialog de cancelamento */}
       <AlertDialog
         open={!!cancelTarget}
         onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
@@ -234,9 +277,8 @@ export default function MeusAgendamentos() {
             <AlertDialogDescription>
               Tem certeza que deseja cancelar o agendamento de{' '}
               <strong>{cancelTarget?.nomeServico}</strong>
-              {cancelTarget && (
-                <> em {fmtIntervalo(cancelTarget.inicio, cancelTarget.fim)}</>
-              )}? Esta ação não pode ser desfeita.
+              {cancelTarget && <> em {fmtIntervalo(cancelTarget.inicio, cancelTarget.fim)}</>}?
+              {' '}Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

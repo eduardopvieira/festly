@@ -13,6 +13,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -104,17 +106,19 @@ public class AgendamentoService {
     }
 
     @Transactional(readOnly = true)
-    public List<AgendamentoResponse> listarDoCliente(Long clienteId) {
-        return repository.findByClienteIdOrderByInicioDesc(clienteId).stream()
-                .map(AgendamentoResponse::from)
-                .toList();
+    public Page<AgendamentoResponse> listarDoCliente(Long clienteId, boolean ativo, Pageable pageable) {
+        if (ativo) {
+            return repository.findAtivosByClienteId(clienteId, pageable).map(AgendamentoResponse::from);
+        }
+        return repository.findHistoricoByClienteId(clienteId, pageable).map(AgendamentoResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public List<AgendamentoResponse> listarDoPrestador(Long prestadorId) {
-        return repository.findByPrestadorId(prestadorId).stream()
-                .map(AgendamentoResponse::from)
-                .toList();
+    public Page<AgendamentoResponse> listarDoPrestador(Long prestadorId, boolean pendente, Pageable pageable) {
+        if (pendente) {
+            return repository.findPendentesByPrestadorId(prestadorId, pageable).map(AgendamentoResponse::from);
+        }
+        return repository.findHistoricoByPrestadorId(prestadorId, pageable).map(AgendamentoResponse::from);
     }
 
     private Agendamento buscarEntidade(Long id) {

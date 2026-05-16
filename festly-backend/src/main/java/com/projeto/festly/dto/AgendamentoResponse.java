@@ -14,6 +14,7 @@ public class AgendamentoResponse {
     private String nomeServico;
     private Long clienteId;
     private String nomeCliente;
+    private String emailCliente;
     private LocalDateTime inicio;
     private LocalDateTime fim;
     private StatusAgendamento status;
@@ -27,6 +28,7 @@ public class AgendamentoResponse {
     private String complemento;
     private String tipoEvento;
     private String observacoes;
+    private LocalDateTime createdAt;
 
     public static AgendamentoResponse from(Agendamento agendamento) {
         AgendamentoResponse response = new AgendamentoResponse();
@@ -35,6 +37,7 @@ public class AgendamentoResponse {
         response.setNomeServico(agendamento.getServico().getNome());
         response.setClienteId(agendamento.getCliente().getId());
         response.setNomeCliente(agendamento.getCliente().getNome());
+        response.setEmailCliente(agendamento.getCliente().getEmail());
         response.setInicio(agendamento.getInicio());
         response.setFim(agendamento.getFim());
         response.setStatus(agendamento.getStatus());
@@ -48,6 +51,7 @@ public class AgendamentoResponse {
         response.setComplemento(agendamento.getComplemento());
         response.setTipoEvento(agendamento.getTipoEvento());
         response.setObservacoes(agendamento.getObservacoes());
+        response.setCreatedAt(agendamento.getCreatedAt());
         return response;
     }
 }

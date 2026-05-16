@@ -12,6 +12,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import java.util.List;
 
 @RestController
@@ -30,8 +33,12 @@ public class AgendamentoController {
 
     @GetMapping("/cliente/{clienteId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AgendamentoResponse>> listarDoCliente(@PathVariable Long clienteId) {
-        return ResponseEntity.ok(service.listarDoCliente(clienteId));
+    public Page<AgendamentoResponse> listarDoCliente(
+            @PathVariable Long clienteId,
+            @RequestParam(defaultValue = "true") boolean ativo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return service.listarDoCliente(clienteId, ativo, PageRequest.of(page, size));
     }
 
     @PostMapping("/{agendamentoId}/cancelar")
@@ -43,9 +50,12 @@ public class AgendamentoController {
 
     @GetMapping("/prestador")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AgendamentoResponse>> listarDoPrestador(
-            @AuthenticationPrincipal Usuario usuario) {
-        return ResponseEntity.ok(service.listarDoPrestador(usuario.getId()));
+    public Page<AgendamentoResponse> listarDoPrestador(
+            @AuthenticationPrincipal Usuario usuario,
+            @RequestParam(defaultValue = "true") boolean pendente,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return service.listarDoPrestador(usuario.getId(), pendente, PageRequest.of(page, size));
     }
 
     @PostMapping("/{id}/confirmar")

@@ -26,8 +26,8 @@ export function criarAgendamento(payload) {
   return api.post('/agendamentos', payload);
 }
 
-export function listarAgendamentosCliente(clienteId) {
-  return api.get(`/agendamentos/cliente/${clienteId}`);
+export function listarAgendamentosCliente(clienteId, { ativo = true, page = 0, size = 10 } = {}) {
+  return api.get(`/agendamentos/cliente/${clienteId}`, { params: { ativo, page, size } });
 }
 
 export function cancelarAgendamento(agendamentoId, clienteId) {
@@ -36,8 +36,8 @@ export function cancelarAgendamento(agendamentoId, clienteId) {
   });
 }
 
-export function listarAgendamentosPrestador() {
-  return api.get('/agendamentos/prestador');
+export function listarAgendamentosPrestador({ pendente = true, page = 0, size = 10 } = {}) {
+  return api.get('/agendamentos/prestador', { params: { pendente, page, size } });
 }
 
 export function confirmarAgendamento(id) {

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import CatalogoCard from '../components/CatalogoCard';
@@ -37,6 +36,20 @@ export default function Services() {
 
   const sentinelaRef = useRef(null);
   const fetchFn = user ? listarServicos : listarServicosPublicos;
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (searchInput === '' || searchInput.length >= 3) setSearchTerm(searchInput);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (cidadeInput === '' || cidadeInput.length >= 3) setCidadeTerm(cidadeInput);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [cidadeInput]);
 
   const carregarPagina = useCallback(async (pagina, substituir = false) => {
     if (pagina === 0) setLoading(true);
@@ -91,18 +104,12 @@ export default function Services() {
     return () => { if (el) observer.unobserve(el); };
   }, [hasMore, loading, loadingMore, carregarPagina]);
 
-  function handleBuscar(e) {
-    e.preventDefault();
-    setSearchTerm(searchInput);
-    setCidadeTerm(cidadeInput);
-  }
-
   return (
     <div className="min-h-full">
       {/* Toolbar */}
       <div className="bg-background border-b sticky top-0 z-10">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4">
-          <form onSubmit={handleBuscar} className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -118,8 +125,7 @@ export default function Services() {
               onChange={(e) => setCidadeInput(e.target.value)}
               className="w-32 sm:w-40"
             />
-            <Button type="submit">Buscar</Button>
-          </form>
+          </div>
 
           <div className="flex gap-2 flex-wrap">
             {CATEGORIAS.map(({ value, label }) => (
