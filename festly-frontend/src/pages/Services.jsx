@@ -19,7 +19,7 @@ const CATEGORIAS = [
 ];
 
 export default function Services() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [servicos, setServicos] = useState([]);
   const [page, setPage] = useState(0);
@@ -76,11 +76,12 @@ export default function Services() {
 
   // Reinicia sempre que os filtros mudam
   useEffect(() => {
+    if (authLoading) return;
     setPage(0);
     setServicos([]);
     setHasMore(true);
     carregarPagina(0, true);
-  }, [searchTerm, cidadeTerm, categoriaAtiva, user]);
+  }, [searchTerm, cidadeTerm, categoriaAtiva, user, authLoading]);
 
   // Carrega próxima página quando o sentinela fica visível
   useEffect(() => {
