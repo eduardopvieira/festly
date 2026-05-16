@@ -25,9 +25,7 @@ public class DisponibilidadeController {
 
     private final DisponibilidadeService service;
 
-    /** Substitui as regras do serviço por inteiro. */
     @PutMapping("/servico/{servicoId}")
-    @PreAuthorize("hasRole('PRESTADOR')")
     public ResponseEntity<List<RegraDisponibilidadeResponse>> definir(
             @PathVariable Long servicoId,
             @AuthenticationPrincipal UserDetails userDetails,
