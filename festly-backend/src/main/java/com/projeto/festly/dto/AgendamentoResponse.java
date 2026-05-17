@@ -15,6 +15,7 @@ public class AgendamentoResponse {
     private Long clienteId;
     private String nomeCliente;
     private String emailCliente;
+    private String nomePrestador;
     private LocalDateTime inicio;
     private LocalDateTime fim;
     private StatusAgendamento status;
@@ -38,6 +39,7 @@ public class AgendamentoResponse {
         response.setClienteId(agendamento.getCliente().getId());
         response.setNomeCliente(agendamento.getCliente().getNome());
         response.setEmailCliente(agendamento.getCliente().getEmail());
+        response.setNomePrestador(agendamento.getServico().getUsuario().getNome());
         response.setInicio(agendamento.getInicio());
         response.setFim(agendamento.getFim());
         response.setStatus(agendamento.getStatus());

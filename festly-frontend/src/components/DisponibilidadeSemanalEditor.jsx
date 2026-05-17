@@ -139,10 +139,6 @@ export default function DisponibilidadeSemanalEditor({ servicoId }) {
           toast.error('Preencha início e fim de todos os intervalos.');
           return;
         }
-        if (it.horaInicio === it.horaFim) {
-          toast.error('Intervalo com início e fim iguais é inválido.');
-          return;
-        }
       }
     }
 
