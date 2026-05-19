@@ -7,6 +7,7 @@ import com.projeto.festly.entity.Servico;
 import com.projeto.festly.entity.StatusAgendamento;
 import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.repository.AgendamentoRepository;
+import com.projeto.festly.repository.AvaliacaoRepository;
 import com.projeto.festly.repository.ServicoRepository;
 import com.projeto.festly.repository.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,6 +32,7 @@ public class AgendamentoService {
     private final ServicoRepository servicoRepository;
     private final UsuarioRepository usuarioRepository;
     private final DisponibilidadeService disponibilidadeService;
+    private final AvaliacaoRepository avaliacaoRepository;
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public AgendamentoResponse agendar(AgendamentoRequest request) {
@@ -105,20 +107,56 @@ public class AgendamentoService {
         agendamento.setStatus(StatusAgendamento.CANCELADO);
     }
 
+    @Transactional
+    public AgendamentoResponse concluir(Long agendamentoId, Long usuarioId) {
+        Agendamento agendamento = buscarEntidade(agendamentoId);
+
+        boolean ehCliente = agendamento.getCliente().getId().equals(usuarioId);
+        boolean ehPrestador = agendamento.getServico().getUsuario().getId().equals(usuarioId);
+        if (!ehCliente && !ehPrestador) {
+            throw new AccessDeniedException("Você não tem permissão sobre este agendamento.");
+        }
+
+        if (agendamento.getStatus() == StatusAgendamento.CONCLUIDO) {
+            boolean jaAvaliado = avaliacaoRepository.existsByAgendamentoId(agendamento.getId());
+            return AgendamentoResponse.from(agendamento, jaAvaliado);
+        }
+
+        if (agendamento.getStatus() != StatusAgendamento.CONFIRMADO) {
+            throw new IllegalArgumentException(
+                    "Apenas agendamentos CONFIRMADO podem ser concluídos.");
+        }
+
+        if (LocalDateTime.now().isBefore(agendamento.getFim())) {
+            throw new IllegalArgumentException(
+                    "Aguarde o término do serviço para concluí-lo.");
+        }
+
+        agendamento.setStatus(StatusAgendamento.CONCLUIDO);
+        boolean jaAvaliado = avaliacaoRepository.existsByAgendamentoId(agendamento.getId());
+        return AgendamentoResponse.from(agendamento, jaAvaliado);
+    }
+
     @Transactional(readOnly = true)
     public Page<AgendamentoResponse> listarDoCliente(Long clienteId, boolean ativo, Pageable pageable) {
-        if (ativo) {
-            return repository.findAtivosByClienteId(clienteId, pageable).map(AgendamentoResponse::from);
-        }
-        return repository.findHistoricoByClienteId(clienteId, pageable).map(AgendamentoResponse::from);
+        Page<Agendamento> page = ativo
+                ? repository.findAtivosByClienteId(clienteId, pageable)
+                : repository.findHistoricoByClienteId(clienteId, pageable);
+        return page.map(this::toResponseComAvaliacaoFlag);
     }
 
     @Transactional(readOnly = true)
     public Page<AgendamentoResponse> listarDoPrestador(Long prestadorId, boolean pendente, Pageable pageable) {
-        if (pendente) {
-            return repository.findPendentesByPrestadorId(prestadorId, pageable).map(AgendamentoResponse::from);
-        }
-        return repository.findHistoricoByPrestadorId(prestadorId, pageable).map(AgendamentoResponse::from);
+        Page<Agendamento> page = pendente
+                ? repository.findPendentesByPrestadorId(prestadorId, pageable)
+                : repository.findHistoricoByPrestadorId(prestadorId, pageable);
+        return page.map(this::toResponseComAvaliacaoFlag);
+    }
+
+    private AgendamentoResponse toResponseComAvaliacaoFlag(Agendamento ag) {
+        boolean jaAvaliado = ag.getStatus() == StatusAgendamento.CONCLUIDO
+                && avaliacaoRepository.existsByAgendamentoId(ag.getId());
+        return AgendamentoResponse.from(ag, jaAvaliado);
     }
 
     private Agendamento buscarEntidade(Long id) {

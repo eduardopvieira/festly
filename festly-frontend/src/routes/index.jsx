@@ -15,6 +15,7 @@ import EditarServico from '../pages/EditarServico';
 import Carrinho from '../pages/Carrinho';
 import MeusAgendamentos from '../pages/MeusAgendamentos';
 import Solicitacoes from '../pages/Solicitacoes';
+import MeusServicosAvaliacoes from '../pages/MeusServicosAvaliacoes';
 import NotFound from '../pages/NotFound';
 
 const router = createBrowserRouter([
@@ -44,6 +45,7 @@ const router = createBrowserRouter([
       { path: '/meus-servicos', element: <MeusServicos /> },
       { path: '/meus-servicos/novo', element: <ServicoWizard /> },
       { path: '/meus-servicos/editar/:id', element: <EditarServico /> },
+      { path: '/meus-servicos/:id/avaliacoes', element: <MeusServicosAvaliacoes /> },
       { path: '/dashboard/carrinho', element: <Carrinho /> },
       { path: '/meus-agendamentos', element: <MeusAgendamentos /> },
       { path: '/solicitacoes', element: <Solicitacoes /> },

@@ -97,13 +97,18 @@ export default function MeusServicos() {
             <ServicoCard
               key={s.id}
               servico={s}
+              linkTo={`/meus-servicos/${s.id}/avaliacoes`}
               acoes={
                 <>
-                  <Link to={`/meus-servicos/editar/${s.id}`}>
+                  <Link
+                    to={`/meus-servicos/editar/${s.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="cursor-pointer"
+                  >
                     <Button
                       variant="secondary"
                       size="icon"
-                      className="h-7 w-7 bg-white/90 hover:bg-white text-foreground"
+                      className="h-7 w-7 bg-white/90 hover:bg-white text-foreground cursor-pointer"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -111,8 +116,12 @@ export default function MeusServicos() {
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="h-7 w-7 bg-white/90 hover:bg-white text-destructive"
-                    onClick={() => setServicoParaExcluir(s.id)}
+                    className="h-7 w-7 bg-white/90 hover:bg-white text-destructive cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setServicoParaExcluir(s.id);
+                    }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

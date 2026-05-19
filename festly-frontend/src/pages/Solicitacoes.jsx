@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ClipboardList, CalendarDays, Loader2, Users,
-  MapPin, Tag, MessageSquare, Mail,
+  MapPin, Tag, MessageSquare, Mail, CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   listarAgendamentosPrestador,
   confirmarAgendamento,
   rejeitarAgendamento,
+  concluirAgendamento,
 } from '../services/agendamentoService';
 
 const STATUS_LABEL = {
@@ -155,6 +156,21 @@ function SolicitacaoCard({ ag, onAcao }) {
             onClick={() => acao(confirmarAgendamento, 'confirmado')}
           >
             {atualizando ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Confirmar'}
+          </Button>
+        </div>
+      )}
+
+      {ag.status === 'CONFIRMADO' && new Date(ag.fim) < new Date() && (
+        <div className="flex gap-2 justify-end">
+          <Button
+            size="sm" variant="outline"
+            className="h-7 text-xs"
+            disabled={atualizando}
+            onClick={() => acao(concluirAgendamento, 'concluído')}
+          >
+            {atualizando
+              ? <Loader2 className="h-3 w-3 animate-spin" />
+              : <><CheckCircle2 className="h-3 w-3 mr-1" />Marcar concluído</>}
           </Button>
         </div>
       )}

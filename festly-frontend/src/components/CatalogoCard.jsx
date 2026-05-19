@@ -71,7 +71,14 @@ export default function CatalogoCard({ servico }) {
             </div>
 
             <div className="flex items-center justify-between gap-3 mt-4">
-              <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
+              {servico.totalAvaliacoes > 0 ? (
+                <span className="text-xs text-amber-500">
+                  ★ {Number(servico.notaMedia).toFixed(1)}{' '}
+                  <span className="text-muted-foreground">({servico.totalAvaliacoes})</span>
+                </span>
+              ) : (
+                <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
+              )}
               <Button size="sm" variant="default" className="h-7 text-xs gap-1.5" onClick={abrirModal}>
                 <CalendarIcon className="h-3 w-3" />
                 Adicionar ao carrinho

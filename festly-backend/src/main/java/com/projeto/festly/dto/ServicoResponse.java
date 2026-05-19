@@ -22,6 +22,8 @@ public class ServicoResponse {
     private String cidade;
     private TipoCobranca tipoCobranca;
     private List<ServicoFotoResponse> fotos;
+    private BigDecimal notaMedia;
+    private long totalAvaliacoes;
 
     public static ServicoResponse from(Servico servico) {
         ServicoResponse response = new ServicoResponse();
@@ -38,6 +40,8 @@ public class ServicoResponse {
         response.setFotos(servico.getFotos().stream()
                 .map(ServicoFotoResponse::from)
                 .toList());
+        response.setNotaMedia(null);
+        response.setTotalAvaliacoes(0L);
         return response;
     }
 }

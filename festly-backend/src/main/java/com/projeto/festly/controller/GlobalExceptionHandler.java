@@ -52,4 +52,10 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleIllegalState(IllegalStateException ex) {
         return Map.of("erro", ex.getMessage());
     }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
+        return Map.of("erro", "Conflito de integridade. A operação não pôde ser concluída.");
+    }
 }

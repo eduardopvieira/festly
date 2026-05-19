@@ -29,8 +29,13 @@ public class AgendamentoResponse {
     private String tipoEvento;
     private String observacoes;
     private LocalDateTime createdAt;
+    private boolean jaAvaliado;
 
     public static AgendamentoResponse from(Agendamento agendamento) {
+        return from(agendamento, false);
+    }
+
+    public static AgendamentoResponse from(Agendamento agendamento, boolean jaAvaliado) {
         AgendamentoResponse response = new AgendamentoResponse();
         response.setId(agendamento.getId());
         response.setServicoId(agendamento.getServico().getId());
@@ -52,6 +57,7 @@ public class AgendamentoResponse {
         response.setTipoEvento(agendamento.getTipoEvento());
         response.setObservacoes(agendamento.getObservacoes());
         response.setCreatedAt(agendamento.getCreatedAt());
+        response.setJaAvaliado(jaAvaliado);
         return response;
     }
 }

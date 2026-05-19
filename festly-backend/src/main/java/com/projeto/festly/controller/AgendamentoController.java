@@ -73,4 +73,12 @@ public class AgendamentoController {
             @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(service.rejeitar(id, usuario.getId()));
     }
+
+    @PostMapping("/{id}/concluir")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AgendamentoResponse> concluir(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(service.concluir(id, usuario.getId()));
+    }
 }

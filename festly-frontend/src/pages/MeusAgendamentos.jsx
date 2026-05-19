@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { CalendarDays, Search, Loader2 } from 'lucide-react';
+import { CalendarDays, Search, Loader2, Star, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,12 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '../contexts/AuthContext';
-import { listarAgendamentosCliente, cancelarAgendamento } from '../services/agendamentoService';
+import {
+  listarAgendamentosCliente,
+  cancelarAgendamento,
+  concluirAgendamento,
+} from '../services/agendamentoService';
+import AvaliacaoModal from '../components/AvaliacaoModal';
 
 const STATUS_LABEL = {
   PENDENTE: 'Pendente', CONFIRMADO: 'Confirmado',
@@ -45,10 +50,21 @@ function fmtIntervalo(inicioISO, fimISO) {
   return `${data} ${hi} → ${dataFim} ${hf}`;
 }
 
-function AgendamentoCard({ agendamento, onCancelClick, isCanceling }) {
+function AgendamentoCard({
+  agendamento,
+  onCancelClick,
+  onConcluir,
+  onAvaliar,
+  isCanceling,
+  isConcluindo,
+}) {
   const [from, to] = avatarGradient(agendamento.nomeServico);
   const initial = agendamento.nomeServico?.charAt(0).toUpperCase() ?? '?';
   const canCancel = agendamento.status === 'PENDENTE';
+  const fimPassou = new Date(agendamento.fim) < new Date();
+  const canConcluir = agendamento.status === 'CONFIRMADO' && fimPassou;
+  const podeAvaliar = agendamento.status === 'CONCLUIDO' && !agendamento.jaAvaliado;
+  const jaAvaliou = agendamento.status === 'CONCLUIDO' && agendamento.jaAvaliado;
 
   return (
     <div className="flex items-center gap-4 py-4">
@@ -81,6 +97,37 @@ function AgendamentoCard({ agendamento, onCancelClick, isCanceling }) {
           {isCanceling ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cancelar'}
         </Button>
       )}
+
+      {canConcluir && (
+        <Button
+          variant="outline" size="sm"
+          onClick={() => onConcluir(agendamento)}
+          disabled={isConcluindo}
+          className="shrink-0 text-xs"
+        >
+          {isConcluindo
+            ? <Loader2 className="h-3 w-3 animate-spin" />
+            : <><CheckCircle2 className="h-3 w-3 mr-1" />Marcar concluído</>}
+        </Button>
+      )}
+
+      {podeAvaliar && (
+        <Button
+          variant="default" size="sm"
+          onClick={() => onAvaliar(agendamento)}
+          className="shrink-0 text-xs"
+        >
+          <Star className="h-3 w-3 mr-1" />
+          Avaliar
+        </Button>
+      )}
+
+      {jaAvaliou && (
+        <span className="text-xs text-amber-500 flex items-center gap-1 shrink-0">
+          <Star className="h-3 w-3 fill-amber-400" />
+          Avaliação enviada
+        </span>
+      )}
     </div>
   );
 }
@@ -99,6 +146,8 @@ export default function MeusAgendamentos() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [cancelTarget, setCancelTarget]   = useState(null);
   const [cancelingId, setCancelingId]     = useState(null);
+  const [concluindoId, setConcluindoId]   = useState(null);
+  const [avaliacaoTarget, setAvaliacaoTarget] = useState(null);
   const sentinelaRef = useRef(null);
 
   const current = tabState[activeTab];
@@ -167,6 +216,20 @@ export default function MeusAgendamentos() {
       toast.error(err.response?.data?.erro || 'Erro ao cancelar agendamento.');
     } finally {
       setCancelingId(null);
+    }
+  }
+
+  async function handleConcluir(agendamento) {
+    setConcluindoId(agendamento.id);
+    try {
+      await concluirAgendamento(agendamento.id);
+      toast.success('Agendamento concluído.');
+      setAvaliacaoTarget(agendamento);
+      recarregarTudo();
+    } catch (err) {
+      toast.error(err.response?.data?.erro ?? 'Erro ao concluir agendamento.');
+    } finally {
+      setConcluindoId(null);
     }
   }
 
@@ -244,7 +307,10 @@ export default function MeusAgendamentos() {
                 key={ag.id}
                 agendamento={ag}
                 onCancelClick={setCancelTarget}
+                onConcluir={handleConcluir}
+                onAvaliar={setAvaliacaoTarget}
                 isCanceling={cancelingId === ag.id}
+                isConcluindo={concluindoId === ag.id}
               />
             ))}
           </CardContent>
@@ -292,6 +358,14 @@ export default function MeusAgendamentos() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AvaliacaoModal
+        open={!!avaliacaoTarget}
+        onOpenChange={(open) => { if (!open) setAvaliacaoTarget(null); }}
+        agendamentoId={avaliacaoTarget?.id}
+        nomeServico={avaliacaoTarget?.nomeServico}
+        onEnviada={recarregarTudo}
+      />
     </div>
   );
 }

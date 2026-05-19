@@ -47,3 +47,7 @@ export function confirmarAgendamento(id) {
 export function rejeitarAgendamento(id) {
   return api.post(`/agendamentos/${id}/rejeitar`);
 }
+
+export function concluirAgendamento(id) {
+  return api.post(`/agendamentos/${id}/concluir`);
+}

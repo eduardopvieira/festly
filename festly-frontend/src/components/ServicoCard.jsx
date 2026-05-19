@@ -1,4 +1,5 @@
 import { MapPin, PartyPopper } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -26,8 +27,27 @@ function formatPrice(preco, tipoCobranca) {
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
-export default function ServicoCard({ servico, acoes }) {
+export default function ServicoCard({ servico, acoes, linkTo }) {
   const temFotos = servico.fotos && servico.fotos.length > 0;
+
+  const ratingContent = servico.totalAvaliacoes > 0 ? (
+    <span className="text-xs text-amber-500 font-medium">
+      ★ {Number(servico.notaMedia).toFixed(1)}{' '}
+      <span className="text-muted-foreground">({servico.totalAvaliacoes})</span>
+    </span>
+  ) : (
+    <span className="text-xs text-amber-500">★ <span className="text-muted-foreground">—</span></span>
+  );
+
+  const ratingNode = linkTo ? (
+    <Link
+      to={linkTo}
+      className="cursor-pointer rounded px-1 -mx-1 hover:bg-muted transition-colors"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {ratingContent}
+    </Link>
+  ) : ratingContent;
 
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-md py-0">
@@ -77,9 +97,12 @@ export default function ServicoCard({ servico, acoes }) {
           </span>
         </div>
         <Separator />
-        <p className="text-sm font-medium text-primary">
-          {formatPrice(servico.preco, servico.tipoCobranca)}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-primary">
+            {formatPrice(servico.preco, servico.tipoCobranca)}
+          </p>
+          {ratingNode}
+        </div>
       </CardContent>
     </Card>
   );
