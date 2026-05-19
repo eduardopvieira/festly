@@ -81,6 +81,9 @@ function AgendamentoCard({
           <CalendarDays className="h-3 w-3" />
           {fmtIntervalo(agendamento.inicio, agendamento.fim)}
         </p>
+        {agendamento.nomePrestador && (
+          <p className="text-xs text-muted-foreground mt-0.5">{agendamento.nomePrestador}</p>
+        )}
       </div>
 
       <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_CLASS[agendamento.status]}`}>
