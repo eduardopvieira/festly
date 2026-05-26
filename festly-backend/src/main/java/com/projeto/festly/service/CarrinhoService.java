@@ -136,57 +136,6 @@ public class CarrinhoService {
         carrinhoRepository.save(carrinho);
     }
 
-    @Transactional
-    public void finalizarCompra(Long usuarioId) {
-        Carrinho carrinho = buscarOuCriar(usuarioId);
-        if (carrinho.getItens().isEmpty()) {
-            throw new IllegalStateException("Seu carrinho está vazio.");
-        }
-
-        for (ItemCarrinho item : carrinho.getItens()) {
-            if (agendamentoRepository.existsActiveConflict(
-                    item.getServico().getId(),
-                    item.getInicio(),
-                    item.getFim()
-            )) {
-                throw new IllegalStateException(
-                        "O serviço '" + item.getServico().getNome() +
-                                "' acabou de ser reservado por outra pessoa para " +
-                                item.getInicio() + ". Remova-o do carrinho para continuar.");
-            }
-        }
-
-        for (ItemCarrinho item : carrinho.getItens()) {
-            Agendamento novo = Agendamento.builder()
-                    .servico(item.getServico())
-                    .cliente(carrinho.getUsuario())
-                    .inicio(item.getInicio())
-                    .fim(item.getFim())
-                    .status(StatusAgendamento.PENDENTE)
-                    .numeroPessoas(item.getNumeroPessoas())
-                    .rua(item.getRua())
-                    .numero(item.getNumero())
-                    .bairro(item.getBairro())
-                    .cidade(item.getCidade())
-                    .estado(item.getEstado())
-                    .cep(item.getCep())
-                    .complemento(item.getComplemento())
-                    .tipoEvento(item.getTipoEvento())
-                    .observacoes(item.getObservacoes())
-                    .build();
-            try {
-                agendamentoRepository.saveAndFlush(novo);
-            } catch (DataIntegrityViolationException ex) {
-                throw new IllegalStateException(
-                        "O serviço '" + item.getServico().getNome() +
-                                "' acabou de ser reservado por outra pessoa.");
-            }
-        }
-
-        carrinho.getItens().clear();
-        carrinhoRepository.save(carrinho);
-    }
-
     /**
      * Mescla itens contíguos do mesmo serviço no carrinho em um único item.
      * Útil quando o cliente adiciona slots consecutivos (ex: 10-11 + 11-12 → 10-12).

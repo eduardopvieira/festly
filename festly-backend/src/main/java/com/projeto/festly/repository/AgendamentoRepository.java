@@ -13,14 +13,13 @@ import java.util.List;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
 
-    /**
-     * Agendamentos ativos (nem CANCELADO nem REJEITADO) cujo intervalo intersecta [inicio, fim).
-     */
     @Query("""
             SELECT a FROM Agendamento a
             WHERE a.servico.id = :servicoId
-              AND a.status <> com.projeto.festly.entity.StatusAgendamento.CANCELADO
-              AND a.status <> com.projeto.festly.entity.StatusAgendamento.REJEITADO
+              AND a.status NOT IN (
+                com.projeto.festly.entity.StatusAgendamento.CANCELADO,
+                com.projeto.festly.entity.StatusAgendamento.REJEITADO,
+                com.projeto.festly.entity.StatusAgendamento.PAGAMENTO_EXPIRADO)
               AND a.inicio < :fim
               AND a.fim    > :inicio
             """)
@@ -33,8 +32,10 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     @Query("""
             SELECT (COUNT(a) > 0) FROM Agendamento a
             WHERE a.servico.id = :servicoId
-              AND a.status <> com.projeto.festly.entity.StatusAgendamento.CANCELADO
-              AND a.status <> com.projeto.festly.entity.StatusAgendamento.REJEITADO
+              AND a.status NOT IN (
+                com.projeto.festly.entity.StatusAgendamento.CANCELADO,
+                com.projeto.festly.entity.StatusAgendamento.REJEITADO,
+                com.projeto.festly.entity.StatusAgendamento.PAGAMENTO_EXPIRADO)
               AND a.inicio < :fim
               AND a.fim    > :inicio
             """)
@@ -48,6 +49,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
             SELECT a FROM Agendamento a
             WHERE a.cliente.id = :clienteId
               AND a.status IN (
+                com.projeto.festly.entity.StatusAgendamento.AGUARDANDO_PAGAMENTO,
                 com.projeto.festly.entity.StatusAgendamento.PENDENTE,
                 com.projeto.festly.entity.StatusAgendamento.CONFIRMADO)
             ORDER BY a.inicio DESC
@@ -59,6 +61,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
             SELECT a FROM Agendamento a
             WHERE a.cliente.id = :clienteId
               AND a.status NOT IN (
+                com.projeto.festly.entity.StatusAgendamento.AGUARDANDO_PAGAMENTO,
                 com.projeto.festly.entity.StatusAgendamento.PENDENTE,
                 com.projeto.festly.entity.StatusAgendamento.CONFIRMADO)
             ORDER BY a.inicio DESC

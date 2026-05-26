@@ -58,4 +58,11 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
         return Map.of("erro", "Conflito de integridade. A operação não pôde ser concluída.");
     }
+
+    @ExceptionHandler(com.projeto.festly.service.payment.PaymentProviderException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public Map<String, String> handlePaymentProvider(
+            com.projeto.festly.service.payment.PaymentProviderException ex) {
+        return Map.of("erro", "Falha no processamento do pagamento. Tente novamente.");
+    }
 }

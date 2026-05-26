@@ -3,13 +3,21 @@ package com.projeto.festly.service;
 import com.projeto.festly.dto.AgendamentoRequest;
 import com.projeto.festly.dto.AgendamentoResponse;
 import com.projeto.festly.entity.Agendamento;
+import com.projeto.festly.entity.ItemPagamento;
+import com.projeto.festly.entity.Pagamento;
 import com.projeto.festly.entity.Servico;
 import com.projeto.festly.entity.StatusAgendamento;
+import com.projeto.festly.entity.StatusItemPagamento;
+import com.projeto.festly.entity.StatusPagamento;
 import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.repository.AgendamentoRepository;
 import com.projeto.festly.repository.AvaliacaoRepository;
+import com.projeto.festly.repository.ItemPagamentoRepository;
+import com.projeto.festly.repository.PagamentoRepository;
 import com.projeto.festly.repository.ServicoRepository;
 import com.projeto.festly.repository.UsuarioRepository;
+import com.projeto.festly.service.payment.PaymentProvider;
+import com.projeto.festly.service.payment.dto.EstornoRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,6 +41,9 @@ public class AgendamentoService {
     private final UsuarioRepository usuarioRepository;
     private final DisponibilidadeService disponibilidadeService;
     private final AvaliacaoRepository avaliacaoRepository;
+    private final ItemPagamentoRepository itemPagamentoRepository;
+    private final PagamentoRepository pagamentoRepository;
+    private final PaymentProvider paymentProvider;
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public AgendamentoResponse agendar(AgendamentoRequest request) {
@@ -91,6 +102,7 @@ public class AgendamentoService {
             throw new IllegalStateException("Apenas agendamentos PENDENTE podem ser rejeitados.");
         }
         agendamento.setStatus(StatusAgendamento.REJEITADO);
+        estornarItemSeAplicavel(agendamentoId, "Prestador rejeitou agendamento");
         return AgendamentoResponse.from(agendamento);
     }
 
@@ -105,6 +117,7 @@ public class AgendamentoService {
             throw new IllegalStateException("Apenas agendamentos PENDENTE podem ser cancelados pelo cliente.");
         }
         agendamento.setStatus(StatusAgendamento.CANCELADO);
+        estornarItemSeAplicavel(agendamentoId, "Cliente cancelou agendamento");
     }
 
     @Transactional
@@ -180,5 +193,30 @@ public class AgendamentoService {
         if (inicio.isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("O horário escolhido já passou.");
         }
+    }
+
+    private void estornarItemSeAplicavel(Long agendamentoId, String motivo) {
+        itemPagamentoRepository.findByAgendamentoId(agendamentoId).ifPresent(item -> {
+            if (item.getStatus() != StatusItemPagamento.ATIVO) return;
+            Pagamento p = item.getPagamento();
+            StatusPagamento ps = p.getStatus();
+            if (ps != StatusPagamento.CONFIRMADO && ps != StatusPagamento.ESTORNADO_PARCIAL) return;
+
+            paymentProvider.estornar(new EstornoRequest(
+                p.getProviderChargeId(), item.getValor(), motivo));
+
+            item.setStatus(StatusItemPagamento.ESTORNADO);
+            itemPagamentoRepository.save(item);
+
+            long total = p.getItens().size();
+            long estornados = p.getItens().stream()
+                .filter(i -> i.getId().equals(item.getId())
+                    || i.getStatus() == StatusItemPagamento.ESTORNADO)
+                .count();
+            p.setStatus(estornados >= total
+                ? StatusPagamento.ESTORNADO_TOTAL
+                : StatusPagamento.ESTORNADO_PARCIAL);
+            pagamentoRepository.save(p);
+        });
     }
 }

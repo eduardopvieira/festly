@@ -55,10 +55,4 @@ public class CarrinhoController {
     public void limpar(@PathVariable Long usuarioId) {
         service.limpar(usuarioId);
     }
-
-    @PostMapping("/{usuarioId}/checkout")
-    @ResponseStatus(HttpStatus.OK)
-    public void finalizarCompra(@PathVariable Long usuarioId) {
-        service.finalizarCompra(usuarioId);
-    }
 }

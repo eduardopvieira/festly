@@ -40,7 +40,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/uploads/**", "/public/**").permitAll()
+                .requestMatchers("/auth/**", "/uploads/**", "/public/**", "/webhooks/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
