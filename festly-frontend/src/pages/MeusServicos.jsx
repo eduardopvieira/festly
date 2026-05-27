@@ -60,9 +60,9 @@ export default function MeusServicos() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Meus Serviços</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Meus Serviços</h1>
           <p className="mt-1 text-muted-foreground">
             {servicos.length} {servicos.length === 1 ? 'serviço cadastrado' : 'serviços cadastrados'}
           </p>

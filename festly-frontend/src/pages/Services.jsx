@@ -124,7 +124,7 @@ export default function Services() {
               placeholder="Cidade"
               value={cidadeInput}
               onChange={(e) => setCidadeInput(e.target.value)}
-              className="w-32 sm:w-40"
+              className="w-24 sm:w-40"
             />
           </div>
 

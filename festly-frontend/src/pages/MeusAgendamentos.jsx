@@ -71,7 +71,7 @@ function AgendamentoCard({
   const jaAvaliou = agendamento.status === 'CONCLUIDO' && agendamento.jaAvaliado;
 
   return (
-    <div className="flex items-center gap-4 py-4">
+    <div className="flex gap-3 py-4">
       <div
         className="h-12 w-12 shrink-0 rounded-xl flex items-center justify-center text-white text-xl font-bold select-none"
         style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
@@ -88,53 +88,55 @@ function AgendamentoCard({
         {agendamento.nomePrestador && (
           <p className="text-xs text-muted-foreground mt-0.5">{agendamento.nomePrestador}</p>
         )}
+
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLASS[agendamento.status]}`}>
+            {STATUS_LABEL[agendamento.status]}
+          </span>
+
+          {canCancel && (
+            <Button
+              variant="ghost" size="sm"
+              onClick={() => onCancelClick(agendamento)}
+              disabled={isCanceling}
+              className="text-muted-foreground hover:text-destructive text-xs h-6 px-2"
+            >
+              {isCanceling ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cancelar'}
+            </Button>
+          )}
+
+          {canConcluir && (
+            <Button
+              variant="outline" size="sm"
+              onClick={() => onConcluir(agendamento)}
+              disabled={isConcluindo}
+              className="text-xs h-6 px-2"
+            >
+              {isConcluindo
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <><CheckCircle2 className="h-3 w-3 mr-1" />Marcar concluído</>}
+            </Button>
+          )}
+
+          {podeAvaliar && (
+            <Button
+              variant="default" size="sm"
+              onClick={() => onAvaliar(agendamento)}
+              className="text-xs h-6 px-2"
+            >
+              <Star className="h-3 w-3 mr-1" />
+              Avaliar
+            </Button>
+          )}
+
+          {jaAvaliou && (
+            <span className="text-xs text-amber-500 flex items-center gap-1">
+              <Star className="h-3 w-3 fill-amber-400" />
+              Avaliação enviada
+            </span>
+          )}
+        </div>
       </div>
-
-      <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_CLASS[agendamento.status]}`}>
-        {STATUS_LABEL[agendamento.status]}
-      </span>
-
-      {canCancel && (
-        <Button
-          variant="ghost" size="sm"
-          onClick={() => onCancelClick(agendamento)}
-          disabled={isCanceling}
-          className="text-muted-foreground hover:text-destructive shrink-0 text-xs"
-        >
-          {isCanceling ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Cancelar'}
-        </Button>
-      )}
-
-      {canConcluir && (
-        <Button
-          variant="outline" size="sm"
-          onClick={() => onConcluir(agendamento)}
-          disabled={isConcluindo}
-          className="shrink-0 text-xs"
-        >
-          {isConcluindo
-            ? <Loader2 className="h-3 w-3 animate-spin" />
-            : <><CheckCircle2 className="h-3 w-3 mr-1" />Marcar concluído</>}
-        </Button>
-      )}
-
-      {podeAvaliar && (
-        <Button
-          variant="default" size="sm"
-          onClick={() => onAvaliar(agendamento)}
-          className="shrink-0 text-xs"
-        >
-          <Star className="h-3 w-3 mr-1" />
-          Avaliar
-        </Button>
-      )}
-
-      {jaAvaliou && (
-        <span className="text-xs text-amber-500 flex items-center gap-1 shrink-0">
-          <Star className="h-3 w-3 fill-amber-400" />
-          Avaliação enviada
-        </span>
-      )}
     </div>
   );
 }

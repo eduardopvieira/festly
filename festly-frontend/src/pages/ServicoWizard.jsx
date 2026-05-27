@@ -20,20 +20,23 @@ const STEPS = [
 
 function StepIndicator({ current }) {
   return (
-    <div className="flex items-center gap-2 mb-8">
+    <div className="flex items-center gap-1 sm:gap-2 mb-8">
       {STEPS.map((step, i) => {
         const done = i < current;
         const active = i === current;
         return (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex items-center gap-1 sm:gap-2">
             <div className={[
-              'h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
+              'h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
               done ? 'bg-primary text-primary-foreground' : active ? 'border-2 border-primary text-primary' : 'border-2 border-muted text-muted-foreground',
             ].join(' ')}>
               {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
             </div>
-            <span className={`text-sm ${active ? 'font-semibold' : 'text-muted-foreground'}`}>{step.label}</span>
-            {i < STEPS.length - 1 && <div className="w-8 h-px bg-muted-foreground/30 mx-1" />}
+            <span className={[
+              'text-xs sm:text-sm',
+              active ? 'font-semibold' : 'text-muted-foreground hidden sm:inline',
+            ].join(' ')}>{step.label}</span>
+            {i < STEPS.length - 1 && <div className="w-5 sm:w-8 h-px bg-muted-foreground/30 mx-0.5 sm:mx-1 shrink-0" />}
           </div>
         );
       })}

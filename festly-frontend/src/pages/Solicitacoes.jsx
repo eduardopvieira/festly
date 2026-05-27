@@ -102,7 +102,7 @@ function SolicitacaoCard({ ag, onAcao }) {
       </div>
 
       {/* Detalhes da solicitação */}
-      <div className="ml-13 pl-0.5 space-y-1.5 text-xs text-muted-foreground border-l-2 border-muted ml-[52px] pl-3">
+      <div className="space-y-1.5 text-xs text-muted-foreground border-l-2 border-muted ml-[52px] pl-3">
         <p className="font-medium text-foreground text-sm">{ag.nomeServico}</p>
 
         <p className="flex items-center gap-1.5 text-emerald-600">
