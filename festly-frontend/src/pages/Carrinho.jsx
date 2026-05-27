@@ -5,8 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
 
 const CATEGORIA_LABEL = {
   BUFFET: 'Buffet', DJ: 'DJ', DECORACAO: 'Decoração',
@@ -107,9 +105,8 @@ function CartItem({ item, onRemove }) {
 }
 
 export default function Carrinho() {
-  const { items, total, loading, removeItem, clearCart, checkout } = useCart();
+  const { items, total, loading, removeItem, clearCart } = useCart();
   const navigate = useNavigate();
-  const [isSolicitando, setIsSolicitando] = useState(false);
 
   async function handleRemove(itemId) {
     try {
@@ -125,20 +122,6 @@ export default function Carrinho() {
       toast.success('Carrinho limpo.');
     } catch {
       toast.error('Erro ao limpar o carrinho.');
-    }
-  }
-
-  async function handleSolicitar() {
-    setIsSolicitando(true);
-    try {
-      await checkout();
-      toast.success('Solicitações enviadas! Aguarde a confirmação dos prestadores.');
-      navigate('/meus-agendamentos');
-    } catch (err) {
-      const mensagem = err.response?.data?.erro || 'Erro ao enviar solicitações.';
-      toast.error(mensagem, { duration: 6000 });
-    } finally {
-      setIsSolicitando(false);
     }
   }
 
@@ -202,17 +185,15 @@ export default function Carrinho() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              As solicitações ficam pendentes até o prestador confirmar.
+              Você escolhe a forma de pagamento (PIX ou cartão) na próxima etapa.
             </p>
 
             <Button
               className="w-full"
               size="lg"
-              onClick={handleSolicitar}
-              disabled={isSolicitando}
+              onClick={() => navigate('/checkout')}
             >
-              {isSolicitando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Solicitar agendamentos
+              Ir para pagamento
             </Button>
           </div>
         </Card>

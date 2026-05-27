@@ -14,6 +14,9 @@ import ServicoWizard from '../pages/ServicoWizard';
 import EditarServico from '../pages/EditarServico';
 import Carrinho from '../pages/Carrinho';
 import MeusAgendamentos from '../pages/MeusAgendamentos';
+import Checkout from '../pages/Checkout';
+import PagamentoDetalhe from '../pages/PagamentoDetalhe';
+import MeusPagamentos from '../pages/MeusPagamentos';
 import Solicitacoes from '../pages/Solicitacoes';
 import MeusServicosAvaliacoes from '../pages/MeusServicosAvaliacoes';
 import NotFound from '../pages/NotFound';
@@ -48,6 +51,9 @@ const router = createBrowserRouter([
       { path: '/meus-servicos/:id/avaliacoes', element: <MeusServicosAvaliacoes /> },
       { path: '/dashboard/carrinho', element: <Carrinho /> },
       { path: '/meus-agendamentos', element: <MeusAgendamentos /> },
+      { path: '/checkout', element: <Checkout /> },
+      { path: '/pagamentos/:id', element: <PagamentoDetalhe /> },
+      { path: '/meus-pagamentos', element: <MeusPagamentos /> },
       { path: '/solicitacoes', element: <Solicitacoes /> },
     ],
   },

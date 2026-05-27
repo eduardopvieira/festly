@@ -34,15 +34,22 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
 
+    @Value("${payment.provider:asaas}")
+    private String paymentProvider;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/uploads/**", "/public/**", "/webhooks/**").permitAll()
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> {
+                auth.requestMatchers("/auth/**", "/uploads/**", "/public/**", "/webhooks/**").permitAll();
+                // Endpoints de dev só são liberados (e só existem) quando o provider fake está ativo.
+                if ("fake".equalsIgnoreCase(paymentProvider)) {
+                    auth.requestMatchers("/dev/**").permitAll();
+                }
+                auth.anyRequest().authenticated();
+            })
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )

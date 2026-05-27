@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays, ClipboardList,
+  Briefcase, User, Search, Menu, PartyPopper, LogOut, ShoppingCart, CalendarDays, ClipboardList, Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ const NAV = [
   { icon: Briefcase,    label: 'Meus Serviços',      to: '/meus-servicos' },
   { icon: ClipboardList, label: 'Solicitações',      to: '/solicitacoes' },
   { icon: CalendarDays, label: 'Meus Agendamentos',  to: '/meus-agendamentos' },
+  { icon: Wallet,       label: 'Meus Pagamentos',    to: '/meus-pagamentos' },
   { icon: User,         label: 'Perfil',             to: '/perfil' },
 ];
 

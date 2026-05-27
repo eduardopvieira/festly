@@ -6,7 +6,6 @@ import {
   removerItem,
   removerSlot,
   limparCarrinho,
-  finalizarCompra,
 } from '../services/carrinhoService';
 
 const CartContext = createContext(null);
@@ -76,12 +75,6 @@ export function CartProvider({ children }) {
     setTotal(0);
   }, [user?.id]);
 
-  const checkout = useCallback(async () => {
-    if (!user) return;
-    await finalizarCompra(user.id);
-    await fetchCart();
-  }, [user?.id, fetchCart]);
-
   const isInCart = useCallback(
     (servicoId) => items.some((item) => item.servico.id === servicoId),
     [items]
@@ -101,7 +94,6 @@ export function CartProvider({ children }) {
         clearCart,
         isInCart,
         fetchCart,
-        checkout,
       }}
     >
       {children}

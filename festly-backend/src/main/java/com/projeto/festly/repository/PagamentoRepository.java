@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
     Optional<Pagamento> findByProviderChargeId(String providerChargeId);
+    Optional<Pagamento> findFirstByPixQrCodeOrderByIdDesc(String pixQrCode);
     Page<Pagamento> findByClienteIdOrderByCreatedAtDesc(Long clienteId, Pageable pageable);
 }

@@ -22,5 +22,3 @@ export function removerSlot(usuarioId, servicoId, inicio, fim) {
 export function limparCarrinho(usuarioId) {
   return api.delete(`/carrinho/${usuarioId}`);
 }
-
-export const finalizarCompra = (usuarioId) => api.post(`/carrinho/${usuarioId}/checkout`);

@@ -18,15 +18,19 @@ import {
 import AvaliacaoModal from '../components/AvaliacaoModal';
 
 const STATUS_LABEL = {
+  AGUARDANDO_PAGAMENTO: 'Aguardando pagamento',
   PENDENTE: 'Pendente', CONFIRMADO: 'Confirmado',
   REJEITADO: 'Rejeitado', CANCELADO: 'Cancelado', CONCLUIDO: 'Concluído',
+  PAGAMENTO_EXPIRADO: 'Pagamento expirado',
 };
 const STATUS_CLASS = {
+  AGUARDANDO_PAGAMENTO: 'bg-amber-100 text-amber-800',
   PENDENTE:   'bg-yellow-100 text-yellow-800',
   CONFIRMADO: 'bg-green-100  text-green-800',
   REJEITADO:  'bg-orange-100 text-orange-700',
   CANCELADO:  'bg-red-100    text-red-700',
   CONCLUIDO:  'bg-blue-100   text-blue-700',
+  PAGAMENTO_EXPIRADO: 'bg-gray-100 text-gray-600',
 };
 const AVATAR_GRADIENTS = [
   ['#7c3aed', '#a78bfa'], ['#0284c7', '#38bdf8'], ['#d97706', '#fb923c'],
@@ -165,10 +169,13 @@ export default function MeusAgendamentos() {
         page: pagina,
         size: 10,
       });
+      const novos = tab === 'ativos'
+        ? data.content.filter((a) => a.status !== 'AGUARDANDO_PAGAMENTO')
+        : data.content;
       setTabState((prev) => ({
         ...prev,
         [tab]: {
-          list: pagina === 0 ? data.content : [...prev[tab].list, ...data.content],
+          list: pagina === 0 ? novos : [...prev[tab].list, ...novos],
           page: pagina,
           hasMore: !data.last,
         },

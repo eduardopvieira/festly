@@ -72,11 +72,13 @@ public class FakePaymentProvider implements PaymentProvider {
 
         if (req.metodo() == MetodoPagamento.PIX) {
             status = StatusCobranca.AGUARDANDO;
-            qr = "00020126360014BR.GOV.BCB.PIX0114+5511999999999"
-                + "5204000053039865406" + formatValor(req.valor())
-                + "5802BR5905FESTLY6009SAO PAULO62070503***6304FAKE";
-            qrBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC"
-                + "AAAAC0lEQVR42mNkAAIAAAoAAv/lxKUAAAAASUVORK5CYII=";
+            // Payload único por cobrança (inclui o chargeId). Em dev isso permite
+            // confirmar/falhar o pagamento pelo próprio código copia-e-cola exibido
+            // na tela (ver DevPagamentoController). O front gera o QR a partir deste
+            // texto, então não precisamos de imagem base64.
+            qr = "00020126580014BR.GOV.BCB.PIX0136" + chargeId
+                + "5204000053039865802BR5905FESTLY6009SAO PAULO62070503***6304FAKE";
+            qrBase64 = null;
         } else {
             boolean aprovado = req.cartao() != null
                 && req.cartao().numero() != null
@@ -144,12 +146,5 @@ public class FakePaymentProvider implements PaymentProvider {
     @Override
     public String nome() {
         return "fake";
-    }
-
-    private static String formatValor(BigDecimal v) {
-        if (v == null) return "0.00";
-        String s = v.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
-        // EMV: tamanho 2 dígitos + valor (formato 5406<len><value>) — aqui só geramos algo plausível
-        return String.format("%02d%s", s.length(), s);
     }
 }
