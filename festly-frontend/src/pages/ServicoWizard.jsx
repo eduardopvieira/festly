@@ -124,7 +124,7 @@ export default function ServicoWizard() {
           <ArrowLeft className="h-4 w-4" />
           {step === 0 ? 'Meus serviços' : 'Voltar'}
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Novo serviço</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Novo serviço</h1>
         <p className="mt-1 text-muted-foreground">Configure seu serviço em 3 etapas.</p>
       </div>
 
@@ -187,7 +187,7 @@ export default function ServicoWizard() {
                   Nenhuma foto adicionada. Você pode pular esta etapa.
                 </p>
               ) : (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {fotos.map((foto) => (
                     <div key={foto.id} className="relative group">
                       <img

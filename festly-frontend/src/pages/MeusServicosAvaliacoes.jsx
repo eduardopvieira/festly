@@ -114,7 +114,7 @@ export default function MeusServicosAvaliacoes() {
       )}
 
       {!loading && avaliacoes.length === 0 && (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="text-center py-10 sm:py-20 text-muted-foreground">
           <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
           <p className="font-medium">Ainda sem avaliações.</p>
         </div>

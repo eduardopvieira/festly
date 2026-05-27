@@ -10,7 +10,7 @@ export default function Perfil() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Meu Perfil</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Meu Perfil</h1>
 
       <Card className="py-0">
         <CardContent className="p-6">

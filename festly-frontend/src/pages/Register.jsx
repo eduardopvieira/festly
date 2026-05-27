@@ -170,7 +170,7 @@ export default function Register() {
           {errors.confirmarSenha && <p className="text-xs text-destructive">{errors.confirmarSenha.message}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">CPF <span className="text-muted-foreground font-normal">(pessoa física)</span></label>
             <Input

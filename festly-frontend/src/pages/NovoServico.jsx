@@ -36,7 +36,7 @@ export default function NovoServico() {
             Meus serviços
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Novo serviço</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Novo serviço</h1>
         <p className="mt-1 text-muted-foreground">Preencha os dados do serviço que você oferece.</p>
       </div>
       <Card className="py-0">

@@ -166,7 +166,7 @@ export default function Services() {
         {!loading && !error && (
           <>
             {servicos.length === 0 ? (
-              <div className="text-center py-20 text-muted-foreground">
+              <div className="text-center py-10 sm:py-20 text-muted-foreground">
                 <Search className="h-10 w-10 mx-auto mb-3 opacity-20" />
                 <p className="font-medium">Nenhum serviço encontrado.</p>
                 <p className="text-sm mt-1">Tente termos diferentes ou remova os filtros.</p>

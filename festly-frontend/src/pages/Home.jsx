@@ -204,7 +204,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8">
             {steps.map(({ icon: Icon, title, description }, index) => (
               <div key={title} className="relative text-center">
                 <div className="flex flex-col items-center">
@@ -300,7 +300,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial) => (
               <Card key={testimonial.name} className="py-0">
                 <CardContent className="p-6 space-y-4">

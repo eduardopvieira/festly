@@ -6,7 +6,8 @@
       "Bash(npm install:*)",
       "Bash(npm run:*)",
       "Bash(npx eslint *)",
-      "Bash(docker exec festly-db *)"
+      "Bash(docker exec festly-db *)",
+      "Bash(git -C /home/eduardo/codigo/festly log --oneline)"
     ]
   }
 }

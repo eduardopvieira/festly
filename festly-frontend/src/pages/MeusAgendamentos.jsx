@@ -282,7 +282,7 @@ export default function MeusAgendamentos() {
 
       {/* Estado vazio */}
       {!loading && current.list.length === 0 && currentPage >= 0 && (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="text-center py-10 sm:py-20 text-muted-foreground">
           <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-20" />
           {activeTab === 'ativos' ? (
             <>
