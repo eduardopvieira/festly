@@ -77,7 +77,7 @@ export default function MeusServicos() {
 
       {servicos.length === 0 ? (
         <Card className="py-0">
-          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+          <CardContent className="flex flex-col items-center justify-center py-10 sm:py-20 text-center">
             <Package className="h-12 w-12 text-muted-foreground/30 mb-4" />
             <h3 className="font-semibold text-lg mb-1">Nenhum serviço cadastrado</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">

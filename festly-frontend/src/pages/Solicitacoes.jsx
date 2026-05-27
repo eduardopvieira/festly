@@ -295,7 +295,7 @@ export default function Solicitacoes() {
 
       {/* Estado vazio */}
       {!loading && current.list.length === 0 && current.page >= 0 && (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="text-center py-10 sm:py-20 text-muted-foreground">
           <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-20" />
           <p className="font-medium">
             {isPendente ? 'Nenhuma solicitação pendente.' : 'Nenhum histórico ainda.'}

@@ -55,7 +55,7 @@ export default function ServiceRegister() {
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Novo Serviço</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Novo Serviço</h1>
         <p className="mt-2 text-muted-foreground">Preencha os detalhes para anunciar no Festly.</p>
       </div>
 

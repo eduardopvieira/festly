@@ -99,7 +99,7 @@ export default function EditarServico() {
             Meus serviços
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Editar serviço</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Editar serviço</h1>
         <p className="mt-1 text-muted-foreground">Atualize os dados do seu serviço.</p>
       </div>
 
@@ -150,7 +150,7 @@ export default function EditarServico() {
                 Nenhuma foto adicionada ainda.
               </p>
             ) : (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {fotos.map((foto) => (
                   <div key={foto.id} className="relative group">
                     <img

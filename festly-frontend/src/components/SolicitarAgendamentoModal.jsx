@@ -241,7 +241,7 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
   // ─── Passo 1 ─────────────────────────────────────────────────────────────
 
   const passo1 = (
-    <div className="grid grid-cols-[1fr,1fr] gap-5 min-h-0">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 min-h-0">
       {/* Coluna esquerda — Calendário */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -392,13 +392,13 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">Rua / Avenida *</label>
                     <Input value={rua} onChange={(e) => setRua(e.target.value)} className="h-8 text-xs" placeholder="Ex: Av. Paulista" />
                   </div>
-                  <div className="w-24">
+                  <div className="w-20 sm:w-24">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">Número *</label>
                     <Input value={numeroEnd} onChange={(e) => setNumeroEnd(e.target.value)} className="h-8 text-xs" placeholder="123" />
                   </div>
                 </div>
                 <Input value={complemento} onChange={(e) => setComplemento(e.target.value)} className="h-8 text-xs" placeholder="Complemento (Apto, Bloco…)" />
-                <div className="grid grid-cols-[1fr,1fr,80px] gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-[1fr,1fr,80px] gap-2">
                   <div>
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">Bairro *</label>
                     <Input value={bairro} onChange={(e) => setBairro(e.target.value)} className="h-8 text-xs" />
@@ -407,7 +407,7 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">Cidade *</label>
                     <Input value={cidade} onChange={(e) => setCidade(e.target.value)} className="h-8 text-xs" />
                   </div>
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">UF *</label>
                     <select value={estado} onChange={(e) => setEstado(e.target.value)} className="h-8 text-xs w-full border rounded-md px-2 bg-background">
                       <option value="">—</option>
@@ -436,7 +436,7 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
       </div>
 
       {/* Tipo do evento + Convidados na mesma linha */}
-      <div className="grid grid-cols-[1fr,auto] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-3">
         <div>
           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">Tipo do evento</label>
           <Input value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value)} className="h-8 text-xs"
