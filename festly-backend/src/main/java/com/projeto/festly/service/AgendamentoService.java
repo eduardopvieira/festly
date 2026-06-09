@@ -8,6 +8,7 @@ import com.projeto.festly.entity.Pagamento;
 import com.projeto.festly.entity.Servico;
 import com.projeto.festly.entity.StatusAgendamento;
 import com.projeto.festly.entity.StatusItemPagamento;
+import com.projeto.festly.entity.StatusItemPagamento;
 import com.projeto.festly.entity.StatusPagamento;
 import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.repository.AgendamentoRepository;
@@ -169,7 +170,9 @@ public class AgendamentoService {
     private AgendamentoResponse toResponseComAvaliacaoFlag(Agendamento ag) {
         boolean jaAvaliado = ag.getStatus() == StatusAgendamento.CONCLUIDO
                 && avaliacaoRepository.existsByAgendamentoId(ag.getId());
-        return AgendamentoResponse.from(ag, jaAvaliado);
+        boolean pago = itemPagamentoRepository
+                .existsByAgendamentoIdAndStatus(ag.getId(), StatusItemPagamento.ATIVO);
+        return AgendamentoResponse.from(ag, jaAvaliado, pago);
     }
 
     private Agendamento buscarEntidade(Long id) {
