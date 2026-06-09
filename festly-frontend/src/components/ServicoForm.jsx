@@ -9,6 +9,9 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
+import { formatCep } from '@/lib/formatCep';
+import { useBuscaCep } from '@/hooks/useBuscaCep';
 
 const schema = z.object({
   nome: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
@@ -22,6 +25,8 @@ const schema = z.object({
     { required_error: 'Selecione uma categoria' }
   ),
   cidade: z.string().min(1, 'Cidade é obrigatória'),
+  cep: z.string().min(8, 'CEP inválido'),
+  estado: z.string().length(2, 'UF inválida'),
   descricao: z.string().max(1000, 'Máximo de 1000 caracteres').optional().or(z.literal('')),
   disponivel: z.boolean().default(true),
 });
@@ -49,11 +54,19 @@ export default function ServicoForm({ defaultValues, onSubmit, isSubmitting, tit
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: defaultValues ?? { disponivel: true },
   });
+
+  const { buscar, loading: buscandoCep, erro: erroCep } = useBuscaCep();
+
+  function preencherEndereco(end) {
+    setValue('cidade', end.cidade, { shouldValidate: true });
+    setValue('estado', end.estado, { shouldValidate: true });
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -115,11 +128,47 @@ export default function ServicoForm({ defaultValues, onSubmit, isSubmitting, tit
         {errors.categoria && <p className="text-xs text-destructive">{errors.categoria.message}</p>}
       </div>
 
-      {/* Cidade */}
+      {/* CEP */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Cidade</label>
-        <Input placeholder="Ex: Mossoró" {...register('cidade')} />
-        {errors.cidade && <p className="text-xs text-destructive">{errors.cidade.message}</p>}
+        <label className="text-sm font-medium">CEP</label>
+        <div className="relative">
+          <Controller
+            name="cep"
+            control={control}
+            render={({ field }) => (
+              <Input
+                placeholder="00000-000"
+                maxLength={9}
+                value={field.value ?? ''}
+                onChange={(e) => {
+                  const masked = formatCep(e.target.value);
+                  field.onChange(masked);
+                  buscar(masked, preencherEndereco);
+                }}
+                onBlur={() => buscar(field.value, preencherEndereco)}
+              />
+            )}
+          />
+          {buscandoCep && (
+            <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          )}
+        </div>
+        {erroCep && <p className="text-xs text-destructive">{erroCep}</p>}
+        {errors.cep && <p className="text-xs text-destructive">{errors.cep.message}</p>}
+      </div>
+
+      {/* Cidade + UF */}
+      <div className="grid grid-cols-[1fr,80px] gap-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Cidade</label>
+          <Input placeholder="Ex: Mossoró" {...register('cidade')} />
+          {errors.cidade && <p className="text-xs text-destructive">{errors.cidade.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">UF</label>
+          <Input maxLength={2} placeholder="RN" {...register('estado')} />
+          {errors.estado && <p className="text-xs text-destructive">{errors.estado.message}</p>}
+        </div>
       </div>
 
       {/* Descrição */}

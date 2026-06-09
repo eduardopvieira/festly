@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2, ShoppingCart, Clock, MapPin, ChevronLeft, Plus, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import {
 import { listarIntervalos, listarRegrasSemanais } from '@/services/agendamentoService';
 import { listarEnderecos, salvarEndereco } from '@/services/enderecoService';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatCep } from '@/lib/formatCep';
+import { useBuscaCep } from '@/hooks/useBuscaCep';
 import { toast } from 'sonner';
 
 const DIAS_SEMANA_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -140,6 +142,17 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
   const [observacoes, setObservacoes] = useState('');
   const [numConvidados, setNumConvidados] = useState('');
   const [salvando, setSalvando] = useState(false);
+
+  const { buscar: buscarCepEndereco, loading: buscandoCep, erro: erroCep } = useBuscaCep();
+  const numeroRef = useRef(null);
+
+  function preencherEndereco(end) {
+    setRua(end.rua);
+    setBairro(end.bairro);
+    setCidade(end.cidade);
+    setEstado(end.estado);
+    numeroRef.current?.focus();
+  }
 
   useEffect(() => {
     if (!open) {
@@ -394,7 +407,7 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
                   </div>
                   <div className="w-20 sm:w-24">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">Número *</label>
-                    <Input value={numeroEnd} onChange={(e) => setNumeroEnd(e.target.value)} className="h-8 text-xs" placeholder="123" />
+                    <Input ref={numeroRef} value={numeroEnd} onChange={(e) => setNumeroEnd(e.target.value)} className="h-8 text-xs" placeholder="123" />
                   </div>
                 </div>
                 <Input value={complemento} onChange={(e) => setComplemento(e.target.value)} className="h-8 text-xs" placeholder="Complemento (Apto, Bloco…)" />
@@ -415,9 +428,26 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
                     </select>
                   </div>
                 </div>
-                <div className="w-32">
+                <div className="w-40">
                   <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide block mb-1">CEP *</label>
-                  <Input value={cep} onChange={(e) => setCep(e.target.value)} className="h-8 text-xs" placeholder="00000-000" maxLength={9} />
+                  <div className="relative">
+                    <Input
+                      value={cep}
+                      onChange={(e) => {
+                        const masked = formatCep(e.target.value);
+                        setCep(masked);
+                        buscarCepEndereco(masked, preencherEndereco);
+                      }}
+                      onBlur={() => buscarCepEndereco(cep, preencherEndereco)}
+                      className="h-8 text-xs pr-7"
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                    {buscandoCep && (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    )}
+                  </div>
+                  {erroCep && <p className="text-[10px] text-destructive mt-1">{erroCep}</p>}
                 </div>
 
                 <div className="flex items-center gap-2 pt-0.5 border-t">
