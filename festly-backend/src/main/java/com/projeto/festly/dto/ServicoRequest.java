@@ -30,6 +30,12 @@ public class ServicoRequest {
     @NotBlank(message = "A cidade é obrigatória")
     private String cidade;
 
+    @Pattern(regexp = "\\d{5}-?\\d{3}", message = "CEP inválido")
+    private String cep;
+
+    @Pattern(regexp = "[A-Za-z]{2}", message = "UF inválida")
+    private String estado;
+
     @NotNull(message = "O tipo de cobrança é obrigatório")
     private TipoCobranca tipoCobranca;
 

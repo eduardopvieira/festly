@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { CalendarDays, Search, Loader2, Star, CheckCircle2 } from 'lucide-react';
+import { CalendarDays, Search, Loader2, Star, CheckCircle2, BadgeCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,12 @@ function AgendamentoCard({
         )}
 
         <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {agendamento.pago && (agendamento.status === 'PENDENTE' || agendamento.status === 'CONFIRMADO') && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+              <BadgeCheck className="h-3 w-3" />
+              Pago
+            </span>
+          )}
           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLASS[agendamento.status]}`}>
             {STATUS_LABEL[agendamento.status]}
           </span>

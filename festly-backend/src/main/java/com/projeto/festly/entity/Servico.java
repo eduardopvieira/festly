@@ -43,6 +43,12 @@ public class Servico {
     @Column(nullable = false)
     private String cidade;
 
+    @Column(length = 9)
+    private String cep;
+
+    @Column(length = 2)
+    private String estado;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_cobranca", nullable = false)
     private TipoCobranca tipoCobranca;

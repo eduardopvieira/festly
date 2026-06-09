@@ -30,6 +30,8 @@ export default function EditarServico() {
           tipoCobranca: data.tipoCobranca,
           categoria: data.categoria,
           cidade: data.cidade,
+          cep: data.cep ?? '',
+          estado: data.estado ?? '',
           descricao: data.descricao ?? '',
           disponivel: data.disponivel,
         });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ClipboardList, CalendarDays, Loader2, Users,
-  MapPin, Tag, MessageSquare, Mail, CheckCircle2,
+  MapPin, Tag, MessageSquare, Mail, CheckCircle2, BadgeCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -94,11 +94,17 @@ function SolicitacaoCard({ ag, onAcao }) {
           </p>
         </div>
 
-        {ag.status !== 'PENDENTE' && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${STATUS_CLASS[ag.status]}`}>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {ag.pago && (ag.status === 'PENDENTE' || ag.status === 'CONFIRMADO') && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+              <BadgeCheck className="h-3 w-3" />
+              Pago
+            </span>
+          )}
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLASS[ag.status]}`}>
             {STATUS_LABEL[ag.status]}
           </span>
-        )}
+        </div>
       </div>
 
       {/* Detalhes da solicitação */}

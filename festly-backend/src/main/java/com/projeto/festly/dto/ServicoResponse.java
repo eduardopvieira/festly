@@ -20,6 +20,8 @@ public class ServicoResponse {
     private Long usuarioId;
     private String nomePrestador;
     private String cidade;
+    private String cep;
+    private String estado;
     private TipoCobranca tipoCobranca;
     private List<ServicoFotoResponse> fotos;
     private BigDecimal notaMedia;
@@ -36,6 +38,8 @@ public class ServicoResponse {
         response.setUsuarioId(servico.getUsuario().getId());
         response.setNomePrestador(servico.getUsuario().getNome());
         response.setCidade(servico.getCidade());
+        response.setCep(servico.getCep());
+        response.setEstado(servico.getEstado());
         response.setTipoCobranca(servico.getTipoCobranca());
         response.setFotos(servico.getFotos().stream()
                 .map(ServicoFotoResponse::from)

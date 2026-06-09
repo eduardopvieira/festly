@@ -31,12 +31,17 @@ public class AgendamentoResponse {
     private String observacoes;
     private LocalDateTime createdAt;
     private boolean jaAvaliado;
+    private boolean pago;
 
     public static AgendamentoResponse from(Agendamento agendamento) {
-        return from(agendamento, false);
+        return from(agendamento, false, false);
     }
 
     public static AgendamentoResponse from(Agendamento agendamento, boolean jaAvaliado) {
+        return from(agendamento, jaAvaliado, false);
+    }
+
+    public static AgendamentoResponse from(Agendamento agendamento, boolean jaAvaliado, boolean pago) {
         AgendamentoResponse response = new AgendamentoResponse();
         response.setId(agendamento.getId());
         response.setServicoId(agendamento.getServico().getId());
@@ -60,6 +65,7 @@ public class AgendamentoResponse {
         response.setObservacoes(agendamento.getObservacoes());
         response.setCreatedAt(agendamento.getCreatedAt());
         response.setJaAvaliado(jaAvaliado);
+        response.setPago(pago);
         return response;
     }
 }

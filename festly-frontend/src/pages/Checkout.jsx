@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CreditCard, QrCode, Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { formatCep } from '@/lib/formatCep';
+import { useBuscaCep } from '@/hooks/useBuscaCep';
 import { toast } from 'sonner';
 import { useCart } from '../contexts/CartContext';
 import { criarCheckout } from '../services/pagamentoService';
@@ -44,9 +46,11 @@ export default function Checkout() {
   const [pagamentoPix, setPagamentoPix] = useState(null);
   const [processando, setProcessando] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, control, formState: { errors } } = useForm({
     resolver: zodResolver(cartaoSchema),
   });
+
+  const { buscar: validarCep, loading: buscandoCep, erro: erroCep } = useBuscaCep();
 
   async function enviar(metodoEscolhido, cartao) {
     setProcessando(true);
@@ -178,7 +182,30 @@ export default function Checkout() {
               </Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="CEP" error={errors.cep}>
-                  <Input inputMode="numeric" placeholder="00000-000" {...register('cep')} />
+                  <div className="relative">
+                    <Controller
+                      name="cep"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          inputMode="numeric"
+                          placeholder="00000-000"
+                          maxLength={9}
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const masked = formatCep(e.target.value);
+                            field.onChange(masked);
+                            validarCep(masked, () => {});
+                          }}
+                          onBlur={() => validarCep(field.value, () => {})}
+                        />
+                      )}
+                    />
+                    {buscandoCep && (
+                      <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    )}
+                  </div>
+                  {erroCep && <p className="text-xs text-destructive">{erroCep}</p>}
                 </Field>
                 <Field label="Número" error={errors.numeroEndereco}>
                   <Input inputMode="numeric" placeholder="123" {...register('numeroEndereco')} />
