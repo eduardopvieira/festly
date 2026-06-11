@@ -3,6 +3,19 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+function normalizarUsuario(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  const tipo = payload.tipoUsuario ?? payload.tipo_usuario;
+  let tipoUsuario = tipo;
+  if (tipo && typeof tipo === 'object' && 'name' in tipo) {
+    tipoUsuario = tipo.name;
+  }
+  return {
+    ...payload,
+    tipoUsuario: typeof tipoUsuario === 'string' ? tipoUsuario.toUpperCase() : tipoUsuario,
+  };
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +32,7 @@ export function AuthProvider({ children }) {
   async function loadUser() {
     try {
       const { data } = await api.get('/auth/me');
-      setUser(data);
+      setUser(normalizarUsuario(data));
     } catch {
       localStorage.removeItem('token');
     } finally {
@@ -28,16 +41,21 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, password) {
-    const { data } = await api.post('/auth/login', { email, password });
+    const { data } = await api.post('/auth/login', { email, senha: password });
     localStorage.setItem('token', data.token);
-    setUser(data.user);
+    setUser(normalizarUsuario({ id: data.id, nome: data.nome, email: data.email, tipoUsuario: data.tipoUsuario ?? data.tipo_usuario }));
     return data;
   }
 
   async function register(userData) {
     const { data } = await api.post('/auth/register', userData);
+    return data;
+  }
+
+  async function verify(email, codigo) {
+    const { data } = await api.post('/auth/verify', { email, codigo });
     localStorage.setItem('token', data.token);
-    setUser(data.user);
+    setUser(normalizarUsuario({ id: data.id, nome: data.nome, email: data.email, tipoUsuario: data.tipoUsuario ?? data.tipo_usuario }));
     return data;
   }
 
@@ -47,7 +65,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verify, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -55,8 +73,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
+  if (!context) throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   return context;
 }

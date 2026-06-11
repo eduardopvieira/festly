@@ -1,6 +1,7 @@
 package com.projeto.festly.dto;
 
 import com.projeto.festly.entity.CategoriaServico;
+import com.projeto.festly.entity.TipoCobranca;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -23,6 +24,21 @@ public class ServicoRequest {
 
     private boolean disponivel = true;
 
-    @NotNull(message = "ID do fornecedor é obrigatório")
-    private Long fornecedorId;
+    @NotNull(message = "ID do usuário é obrigatório")
+    private Long usuarioId;
+
+    @NotBlank(message = "A cidade é obrigatória")
+    private String cidade;
+
+    @Pattern(regexp = "\\d{5}-?\\d{3}", message = "CEP inválido")
+    private String cep;
+
+    @Pattern(regexp = "[A-Za-z]{2}", message = "UF inválida")
+    private String estado;
+
+    @NotNull(message = "O tipo de cobrança é obrigatório")
+    private TipoCobranca tipoCobranca;
+
+    private String imagemCapa;
+
 }

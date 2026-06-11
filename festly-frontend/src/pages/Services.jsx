@@ -1,88 +1,201 @@
-import { Search, Filter, MapPin, Star, PartyPopper } from 'lucide-react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Search } from 'lucide-react';
+import CatalogoCard from '../components/CatalogoCard';
+import { listarServicos, listarServicosPublicos } from '../services/servicoService';
+import { useAuth } from '@/contexts/AuthContext';
 
-const mockServices = [
-  { id: 1, name: 'Decorações Encantadas', category: 'Decoração', rating: 4.8, reviews: 124, city: 'Mossoró', price: 'A partir de R$ 1.200' },
-  { id: 2, name: 'Buffet Sabor & Arte', category: 'Buffet', rating: 4.9, reviews: 87, city: 'Natal', price: 'A partir de R$ 45/pessoa' },
-  { id: 3, name: 'DJ Paulo Silva', category: 'Som e Iluminação', rating: 4.7, reviews: 56, city: 'Apodi', price: 'A partir de R$ 800' },
-  { id: 4, name: 'Foto Momentos', category: 'Fotografia', rating: 4.6, reviews: 203, city: 'Parnamirim', price: 'A partir de R$ 1.500' },
-  { id: 5, name: 'Doce Festa', category: 'Bolos e Doces', rating: 5.0, reviews: 42, city: 'Caicó', price: 'A partir de R$ 300' },
-  { id: 6, name: 'Anima Kids', category: 'Animação', rating: 4.5, reviews: 68, city: 'Açu', price: 'A partir de R$ 500' },
+const CATEGORIAS = [
+  { value: 'TODOS', label: 'Todos' },
+  { value: 'BUFFET', label: 'Buffet' },
+  { value: 'DECORACAO', label: 'Decoração' },
+  { value: 'FOTOGRAFIA', label: 'Fotografia' },
+  { value: 'DJ', label: 'DJ' },
+  { value: 'ILUMINACAO', label: 'Iluminação' },
+  { value: 'SOM', label: 'Som' },
+  { value: 'ANIMACAO', label: 'Animação' },
+  { value: 'SEGURANCA', label: 'Segurança' },
+  { value: 'OUTROS', label: 'Outros' },
 ];
 
 export default function Services() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const { user, loading: authLoading } = useAuth();
 
-  const filtered = mockServices.filter((s) =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [servicos, setServicos] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(false);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [cidadeInput, setCidadeInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [cidadeTerm, setCidadeTerm] = useState('');
+  const [categoriaAtiva, setCategoriaAtiva] = useState('TODOS');
+
+  const sentinelaRef = useRef(null);
+  const fetchFn = user ? listarServicos : listarServicosPublicos;
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (searchInput === '' || searchInput.length >= 3) setSearchTerm(searchInput);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (cidadeInput === '' || cidadeInput.length >= 3) setCidadeTerm(cidadeInput);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [cidadeInput]);
+
+  const carregarPagina = useCallback(async (pagina, substituir = false) => {
+    if (pagina === 0) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const { data } = await fetchFn({
+        nome: searchTerm,
+        cidade: cidadeTerm,
+        categoria: categoriaAtiva,
+        page: pagina,
+      });
+
+      setServicos((prev) => substituir ? data.content : [...prev, ...data.content]);
+      setHasMore(!data.last);
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [fetchFn, searchTerm, cidadeTerm, categoriaAtiva]);
+
+  // Reinicia sempre que os filtros mudam
+  useEffect(() => {
+    if (authLoading) return;
+    setPage(0);
+    setServicos([]);
+    setHasMore(true);
+    carregarPagina(0, true);
+  }, [searchTerm, cidadeTerm, categoriaAtiva, user, authLoading]);
+
+  // Carrega próxima página quando o sentinela fica visível
+  useEffect(() => {
+    if (!hasMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          setPage((p) => {
+            const next = p + 1;
+            carregarPagina(next);
+            return next;
+          });
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    const el = sentinelaRef.current;
+    if (el) observer.observe(el);
+    return () => { if (el) observer.unobserve(el); };
+  }, [hasMore, loading, loadingMore, carregarPagina]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Serviços</h1>
-        <p className="mt-2 text-muted-foreground">Encontre o profissional perfeito para o seu evento.</p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou categoria..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filtros
-        </Button>
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((service) => (
-          <Card key={service.id} className="group cursor-pointer overflow-hidden transition-all hover:shadow-md py-0">
-            <div className="h-36 bg-gradient-to-br from-primary/8 to-primary/3 flex items-center justify-center">
-              <PartyPopper className="h-10 w-10 text-primary/20" />
+    <div className="min-h-full">
+      {/* Toolbar */}
+      <div className="bg-background border-b sticky top-0 z-10">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou serviço..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-9"
+              />
             </div>
-            <CardContent className="p-4 space-y-3">
-              <Badge variant="secondary" className="text-xs">
-                {service.category}
-              </Badge>
-              <h3 className="font-semibold group-hover:text-primary transition-colors">
-                {service.name}
-              </h3>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {service.city}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {service.rating} ({service.reviews})
-                </span>
-              </div>
-              <Separator />
-              <p className="text-sm font-medium text-primary">{service.price}</p>
-            </CardContent>
-          </Card>
-        ))}
+            <Input
+              placeholder="Cidade"
+              value={cidadeInput}
+              onChange={(e) => setCidadeInput(e.target.value)}
+              className="w-full sm:w-40"
+            />
+          </div>
+
+          <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+            {CATEGORIAS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setCategoriaAtiva(value)}
+                className={[
+                  'text-xs px-2.5 sm:px-3 py-1.5 rounded-full font-medium transition-colors whitespace-nowrap',
+                  categoriaAtiva === value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                ].join(' ')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {filtered.length === 0 && (
-        <div className="text-center py-20 text-muted-foreground">
-          <Search className="h-12 w-12 mx-auto mb-4 opacity-30" />
-          <p className="text-lg font-medium">Nenhum serviço encontrado.</p>
-          <p className="text-sm mt-1">Tente buscar com termos diferentes.</p>
-        </div>
-      )}
+      {/* Conteúdo */}
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6">
+        {loading && (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center py-20 text-muted-foreground">
+            <p>Não foi possível carregar os serviços. Tente novamente mais tarde.</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            {servicos.length === 0 ? (
+              <div className="text-center py-10 sm:py-20 text-muted-foreground">
+                <Search className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p className="font-medium">Nenhum serviço encontrado.</p>
+                <p className="text-sm mt-1">Tente termos diferentes ou remova os filtros.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {servicos.map((s) => (
+                  <CatalogoCard key={s.id} servico={s} />
+                ))}
+              </div>
+            )}
+
+            {/* Sentinela de scroll infinito */}
+            {hasMore && (
+              <div ref={sentinelaRef} className="py-4 flex justify-center">
+                {loadingMore && (
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                )}
+              </div>
+            )}
+
+            {!hasMore && servicos.length > 0 && (
+              <p className="text-center text-xs text-muted-foreground pt-6">
+                Todos os serviços foram carregados.
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

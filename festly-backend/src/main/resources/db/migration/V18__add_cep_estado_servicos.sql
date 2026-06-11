@@ -1,0 +1,3 @@
+ALTER TABLE servicos
+    ADD COLUMN cep VARCHAR(9),
+    ADD COLUMN estado VARCHAR(2);

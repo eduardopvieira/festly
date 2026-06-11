@@ -1,157 +1,218 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '../contexts/AuthContext';
+import { maskCpf, maskCnpj, isValidCpf, isValidCnpj } from '@/lib/validators';
+
+const schema = z.object({
+  nome: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  senha: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+  confirmarSenha: z.string(),
+  cpf: z.string().optional(),
+  cnpj: z.string().optional(),
+})
+  .refine(data => data.senha === data.confirmarSenha, {
+    message: 'As senhas não coincidem',
+    path: ['confirmarSenha'],
+  })
+  .refine(data => {
+    const temCpf = data.cpf && data.cpf.replace(/\D/g, '').length > 0;
+    const temCnpj = data.cnpj && data.cnpj.replace(/\D/g, '').length > 0;
+    return temCpf || temCnpj;
+  }, {
+    message: 'Informe o CPF ou CNPJ.',
+    path: ['cpf'],
+  })
+  .refine(data => {
+    if (!data.cpf || data.cpf.replace(/\D/g, '').length === 0) return true;
+    return isValidCpf(data.cpf);
+  }, { message: 'CPF inválido', path: ['cpf'] })
+  .refine(data => {
+    if (!data.cnpj || data.cnpj.replace(/\D/g, '').length === 0) return true;
+    return isValidCnpj(data.cnpj);
+  }, { message: 'CNPJ inválido', path: ['cnpj'] });
+
+function getPasswordStrength(password) {
+  if (!password || password.length < 6) return null;
+  const hasLetters = /[a-zA-Z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  if (password.length < 8 || !hasLetters || !hasNumbers) {
+    return { label: 'Fraca', color: 'bg-red-500', width: 'w-1/3' };
+  }
+  if (hasLetters && hasNumbers && !hasSpecial) {
+    return { label: 'Média', color: 'bg-yellow-500', width: 'w-2/3' };
+  }
+  return { label: 'Forte', color: 'bg-green-500', width: 'w-full' };
+}
 
 export default function Register() {
-  const { register: registerUser } = useAuth();
+  const { register: registerAuth } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'CLIENT',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [senhaValue, setSenhaValue] = useState('');
+  const [formError, setFormError] = useState('');
 
-  function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError('');
-
-    if (form.password !== form.confirmPassword) {
-      setError('As senhas não coincidem.');
-      return;
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      nome: '',
+      email: '',
+      senha: '',
+      confirmarSenha: '',
+      cpf: '',
+      cnpj: '',
     }
+  });
 
-    setLoading(true);
+  const strength = getPasswordStrength(senhaValue);
+
+  async function onSubmit(values) {
+    setFormError('');
     try {
-      await registerUser({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        role: form.role,
-      });
-      navigate('/dashboard');
-    } catch {
-      setError('Erro ao criar conta. Tente novamente.');
-    } finally {
-      setLoading(false);
+      const payload = {
+        nome: values.nome,
+        email: values.email,
+        senha: values.senha,
+        cpf: values.cpf ? values.cpf.replace(/\D/g, '') || null : null,
+        cnpj: values.cnpj ? values.cnpj.replace(/\D/g, '') || null : null,
+      };
+      await registerAuth(payload);
+      toast.success('Cadastro realizado! Verifique seu e-mail.');
+      navigate(`/verify-email?email=${encodeURIComponent(values.email)}`);
+    } catch (err) {
+      const mensagem = err.response?.data?.erro || 'Erro ao realizar cadastro';
+      setFormError(mensagem);
     }
   }
 
   return (
-    <>
-      <h1 className="text-2xl font-bold text-center mb-6">Criar conta</h1>
+    <div>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold">Criar conta</h1>
+        <p className="text-sm text-muted-foreground mt-1">Junte-se à Festly gratuitamente</p>
+      </div>
 
-      {error && (
-        <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {formError && (
+          <div className="rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2 text-sm text-destructive">
+            {formError}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1.5">
-            Nome completo
-          </label>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Seu nome"
-          />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Nome completo</label>
+          <Input placeholder="Seu nome" {...register('nome')} />
+          {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-            Email
-          </label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            value={form.email}
-            onChange={handleChange}
-            placeholder="seu@email.com"
-          />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Email</label>
+          <Input type="email" placeholder="seu@email.com" {...register('email')} />
+          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1.5">
-            Senha
-          </label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            required
-            value={form.password}
-            onChange={handleChange}
-            placeholder="••••••••"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1.5">
-            Confirmar senha
-          </label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            required
-            value={form.confirmPassword}
-            onChange={handleChange}
-            placeholder="••••••••"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Eu sou</label>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Senha</label>
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Mínimo 6 caracteres"
+              className="pr-10"
+              {...register('senha', {
+                onChange: (e) => setSenhaValue(e.target.value),
+              })}
+            />
+            <button
               type="button"
-              variant={form.role === 'CLIENT' ? 'default' : 'outline'}
-              onClick={() => setForm((p) => ({ ...p, role: 'CLIENT' }))}
-              className="w-full"
-              size="sm"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              Cliente
-            </Button>
-            <Button
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {strength && (
+            <div className="space-y-1">
+              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-300 ${strength.color} ${strength.width}`} />
+              </div>
+              <p className="text-xs text-muted-foreground">Força da senha: <span className="font-medium">{strength.label}</span></p>
+            </div>
+          )}
+          {errors.senha && <p className="text-xs text-destructive">{errors.senha.message}</p>}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Confirmar senha</label>
+          <div className="relative">
+            <Input
+              type={showConfirm ? 'text' : 'password'}
+              placeholder="Repita a senha"
+              className="pr-10"
+              {...register('confirmarSenha')}
+            />
+            <button
               type="button"
-              variant={form.role === 'PROVIDER' ? 'default' : 'outline'}
-              onClick={() => setForm((p) => ({ ...p, role: 'PROVIDER' }))}
-              className="w-full"
-              size="sm"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              Prestador
-            </Button>
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirmarSenha && <p className="text-xs text-destructive">{errors.confirmarSenha.message}</p>}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">CPF <span className="text-muted-foreground font-normal">(pessoa física)</span></label>
+            <Input
+              placeholder="000.000.000-00"
+              {...register('cpf')}
+              onChange={(e) => {
+                const masked = maskCpf(e.target.value);
+                e.target.value = masked;
+                setValue('cpf', masked);
+              }}
+            />
+            {errors.cpf && <p className="text-xs text-destructive">{errors.cpf.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">CNPJ <span className="text-muted-foreground font-normal">(empresa/MEI)</span></label>
+            <Input
+              placeholder="00.000.000/0000-00"
+              {...register('cnpj')}
+              onChange={(e) => {
+                const masked = maskCnpj(e.target.value);
+                e.target.value = masked;
+                setValue('cnpj', masked);
+              }}
+            />
+            {errors.cnpj && <p className="text-xs text-destructive">{errors.cnpj.message}</p>}
           </div>
         </div>
+        <p className="text-xs text-muted-foreground -mt-2">Informe ao menos um dos documentos acima.</p>
 
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? 'Criando conta...' : 'Criar conta'}
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Criar conta
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground mt-6">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Já tem conta?{' '}
-        <Link to="/login" className="text-primary font-medium hover:underline">
-          Entrar
+        <Link to="/login" className="font-medium text-primary hover:underline">
+          Entre aqui
         </Link>
       </p>
-    </>
+    </div>
   );
 }

@@ -3,11 +3,15 @@ package com.projeto.festly.controller;
 import com.projeto.festly.dto.ServicoRequest;
 import com.projeto.festly.dto.ServicoResponse;
 import com.projeto.festly.entity.CategoriaServico;
+import com.projeto.festly.entity.Usuario;
 import com.projeto.festly.service.ServicoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -26,11 +30,17 @@ public class ServicoController {
     }
 
     @GetMapping
-    public List<ServicoResponse> listar(
+    public Page<ServicoResponse> listar(
+            @RequestParam(required = false) String nome,
             @RequestParam(required = false) CategoriaServico categoria,
+            @RequestParam(required = false) String cidade,
             @RequestParam(required = false) BigDecimal precoMax,
-            @RequestParam(required = false) Boolean disponivel) {
-        return service.listar(categoria, precoMax, disponivel);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @AuthenticationPrincipal Usuario usuario) {
+
+        Long excludeId = usuario != null ? usuario.getId() : null;
+        return service.listar(nome, categoria, cidade, precoMax, excludeId, PageRequest.of(page, size));
     }
 
     @GetMapping("/{id}")
@@ -38,9 +48,9 @@ public class ServicoController {
         return service.buscarPorId(id);
     }
 
-    @GetMapping("/fornecedor/{fornecedorId}")
-    public List<ServicoResponse> listarPorFornecedor(@PathVariable Long fornecedorId) {
-        return service.listarPorFornecedor(fornecedorId);
+    @GetMapping("/usuario/{usuarioId}")
+    public List<ServicoResponse> listarPorUsuario(@PathVariable Long usuarioId) {
+        return service.listarPorUsuario(usuarioId);
     }
 
     @PutMapping("/{id}")

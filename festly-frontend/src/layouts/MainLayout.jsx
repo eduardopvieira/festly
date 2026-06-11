@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { PartyPopper, User, LogOut, Menu } from 'lucide-react';
+import { PartyPopper, LogOut, Menu, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -11,14 +11,14 @@ import {
 } from '@/components/ui/sheet';
 import { useAuth } from '../contexts/AuthContext';
 
-const navLinks = [
-  { to: '/services', label: 'Serviços' },
-  { to: '/how-it-works', label: 'Como funciona' },
-  { to: '/about', label: 'Sobre' },
-];
-
 export default function MainLayout() {
   const { user, logout } = useAuth();
+
+  const navLinks = [
+    { to: '/catalogo', label: 'Serviços' },
+    { to: '/how-it-works', label: 'Como funciona' },
+    { to: '/about', label: 'Sobre' },
+  ];
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -57,12 +57,12 @@ export default function MainLayout() {
             {user ? (
               <>
                 <Link to="/dashboard">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <User className="h-4 w-4" />
-                    {user.name || 'Minha conta'}
+                  <Button size="sm" className="gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Painel
                   </Button>
                 </Link>
-                <Button variant="ghost" size="icon-sm" onClick={handleLogout}>
+                <Button variant="ghost" size="icon-sm" onClick={handleLogout} aria-label="Sair">
                   <LogOut className="h-4 w-4" />
                 </Button>
               </>
@@ -112,9 +112,9 @@ export default function MainLayout() {
                   <>
                     <SheetClose asChild>
                       <Link to="/dashboard">
-                        <Button variant="outline" className="w-full justify-start gap-2" size="sm">
-                          <User className="h-4 w-4" />
-                          Minha conta
+                        <Button className="w-full justify-start gap-2" size="sm">
+                          <LayoutDashboard className="h-4 w-4" />
+                          Ir ao Painel
                         </Button>
                       </Link>
                     </SheetClose>
@@ -169,10 +169,10 @@ export default function MainLayout() {
             <div>
               <h4 className="font-semibold text-sm mb-3">Serviços</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/services?cat=decoracao" className="hover:text-foreground transition-colors">Decoração</Link></li>
-                <li><Link to="/services?cat=buffet" className="hover:text-foreground transition-colors">Buffet</Link></li>
-                <li><Link to="/services?cat=som" className="hover:text-foreground transition-colors">Som e Iluminação</Link></li>
-                <li><Link to="/services?cat=fotografia" className="hover:text-foreground transition-colors">Fotografia</Link></li>
+                <li><Link to="/catalogo?cat=decoracao" className="hover:text-foreground transition-colors">Decoração</Link></li>
+                <li><Link to="/catalogo?cat=buffet" className="hover:text-foreground transition-colors">Buffet</Link></li>
+                <li><Link to="/catalogo?cat=som" className="hover:text-foreground transition-colors">Som e Iluminação</Link></li>
+                <li><Link to="/catalogo?cat=fotografia" className="hover:text-foreground transition-colors">Fotografia</Link></li>
               </ul>
             </div>
             <div>
