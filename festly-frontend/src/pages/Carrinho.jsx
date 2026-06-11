@@ -59,7 +59,7 @@ function CartItem({ item, onRemove }) {
   const legenda = legendaPreco(item);
 
   return (
-    <div className="flex items-center gap-4 py-4">
+    <div className="flex items-start gap-3 py-4">
       <div
         className="h-12 w-12 shrink-0 rounded-xl flex items-center justify-center text-white text-xl font-bold select-none"
         style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
@@ -68,7 +68,25 @@ function CartItem({ item, onRemove }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm leading-tight">{servico.nome}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-semibold text-sm leading-tight">{servico.nome}</p>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <div className="text-right">
+              <p className="font-bold text-sm">{price}</p>
+              {legenda && <p className="text-xs text-muted-foreground">{legenda}</p>}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => onRemove(item.id)}
+              aria-label="Remover"
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
         <p className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
           <Calendar className="h-3 w-3" />
@@ -85,21 +103,6 @@ function CartItem({ item, onRemove }) {
           )}
         </p>
       </div>
-
-      <div className="text-right shrink-0 mr-2">
-        <p className="font-bold text-sm">{price}</p>
-        {legenda && <p className="text-xs text-muted-foreground">{legenda}</p>}
-      </div>
-
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => onRemove(item.id)}
-        aria-label="Remover"
-        className="text-muted-foreground hover:text-destructive"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
     </div>
   );
 }

@@ -499,7 +499,7 @@ export default function SolicitarAgendamentoModal({ open, onOpenChange, servico,
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="p-0 gap-0 overflow-hidden flex flex-col sm:max-w-3xl max-h-[92vh]">
+      <AlertDialogContent size="none" className="p-0 gap-0 overflow-hidden flex flex-col max-w-[calc(100vw-2rem)] sm:max-w-md md:max-w-lg max-h-[92vh]">
 
         {/* Header fixo */}
         <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b flex-none">

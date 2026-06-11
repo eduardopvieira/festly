@@ -110,7 +110,7 @@ export default function Services() {
       {/* Toolbar */}
       <div className="bg-background border-b sticky top-0 z-10">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 py-4">
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -124,17 +124,17 @@ export default function Services() {
               placeholder="Cidade"
               value={cidadeInput}
               onChange={(e) => setCidadeInput(e.target.value)}
-              className="w-24 sm:w-40"
+              className="w-full sm:w-40"
             />
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1.5 sm:gap-2 flex-wrap">
             {CATEGORIAS.map(({ value, label }) => (
               <button
                 key={value}
                 onClick={() => setCategoriaAtiva(value)}
                 className={[
-                  'text-xs px-3 py-1.5 rounded-full font-medium transition-colors whitespace-nowrap',
+                  'text-xs px-2.5 sm:px-3 py-1.5 rounded-full font-medium transition-colors whitespace-nowrap',
                   categoriaAtiva === value
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80',
