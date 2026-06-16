@@ -9,7 +9,9 @@
       "Bash(docker exec festly-db *)",
       "Bash(git -C /home/eduardo/codigo/festly log --oneline)",
       "Bash(xargs cat)",
-      "Bash(./mvnw clean *)"
+      "Bash(./mvnw clean *)",
+      "Bash(psql --version)",
+      "Bash(docker exec *)"
     ]
   }
 }
